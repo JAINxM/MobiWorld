@@ -15,10 +15,10 @@
                     <a href="#" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition">
                         <i class="fab fa-facebook-f"></i>
                     </a>
-                    <a href="#" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition">
+                    <a href="https://x.com/JainamisLost" target="_blank" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition">
                         <i class="fab fa-twitter"></i>
                     </a>
-                    <a href="#" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition">
+                    <a href="https://www.instagram.com/jainam._raval/" target="_blank" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition">
                         <i class="fab fa-instagram"></i>
                     </a>
                 </div>
@@ -56,7 +56,7 @@
                     </li>
                     <li class="flex items-center text-slate-500">
                         <i class="fas fa-phone-alt w-6 text-primary"></i>
-                        +1 (555) 000-0000
+                        +91 9104422691
                     </li>
                     <li class="flex items-center text-slate-500">
                         <i class="fas fa-envelope w-6 text-primary"></i>
