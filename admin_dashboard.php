@@ -20,7 +20,7 @@ if (!isAdminLoggedIn()) {
     redirect('admin_login.php');
 }
 
-$validSections = ['dashboard', 'products', 'customers', 'orders', 'add-product'];
+$validSections = ['dashboard', 'products', 'customers', 'orders', 'add-product', 'edit-product'];
 $section = isset($_GET['section']) ? (string) $_GET['section'] : 'dashboard';
 if (!in_array($section, $validSections, true)) {
     $section = 'dashboard';
@@ -115,6 +115,33 @@ if ($section === 'add-product' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POS
             $message = 'Product added successfully. Product ID: ' . $pdo->lastInsertId();
         } catch (Throwable $e) {
             $error = defined('APP_DEBUG') && APP_DEBUG ? $e->getMessage() : 'Failed to add product.';
+        }
+    }
+}
+
+if ($section === 'edit-product' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['update_product'])) {
+    $productId = (int) ($_POST['product_id'] ?? 0);
+    $name = trim((string) ($_POST['name'] ?? ''));
+    $brand = trim((string) ($_POST['brand'] ?? ''));
+    $regularPrice = (float) ($_POST['regular_price'] ?? 0);
+    $discountedRaw = trim((string) ($_POST['discounted_price'] ?? ''));
+    $discountedPrice = $discountedRaw === '' ? null : (float) $discountedRaw;
+    $stockQuantity = max(0, (int) ($_POST['stock_quantity'] ?? 0));
+    $isActive = isset($_POST['is_active']) ? 1 : 0;
+    $imageUrl = trim((string) ($_POST['image_url'] ?? ''));
+    $description = trim((string) ($_POST['description'] ?? ''));
+
+    if ($productId <= 0 || $name === '' || $brand === '' || $regularPrice <= 0) {
+        $error = 'Valid product, name, brand and regular price are required.';
+    } elseif ($discountedPrice !== null && $discountedPrice < 0) {
+        $error = 'Discount price cannot be negative.';
+    } else {
+        try {
+            $updateStmt = $pdo->prepare('UPDATE product_master SET name = ?, brand = ?, regular_price = ?, discounted_price = ?, stock_quantity = ?, is_active = ?, image_url = ?, description = ? WHERE product_id = ?');
+            $updateStmt->execute([$name, $brand, $regularPrice, $discountedPrice, $stockQuantity, $isActive, $imageUrl, $description, $productId]);
+            $message = 'Product #' . $productId . ' updated successfully.';
+        } catch (Throwable $e) {
+            $error = defined('APP_DEBUG') && APP_DEBUG ? $e->getMessage() : 'Failed to update product.';
         }
     }
 }
@@ -256,19 +283,20 @@ function orderStatusBadgeClass(string $status): string
 </head>
 <body class="min-h-screen text-slate-900">
 <div class="flex min-h-screen">
-    <aside class="hidden w-72 border-r border-slate-200/80 bg-white/85 px-6 py-8 backdrop-blur-lg lg:flex lg:flex-col">
+    <aside class="hidden h-screen w-72 border-r border-slate-200/80 bg-white/85 px-6 py-8 backdrop-blur-lg lg:sticky lg:top-0 lg:flex lg:flex-col">
         <div class="mb-10">
             <a href="admin_dashboard.php" class="text-4xl font-extrabold leading-tight bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">MobiWorld<br>Admin</a>
         </div>
         <nav class="space-y-3">
             <a href="<?php echo htmlspecialchars(adminLink('dashboard', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'dashboard' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-house mr-4"></i> Dashboard</a>
-            <a href="<?php echo htmlspecialchars(adminLink('products', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'products' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-mobile-screen mr-4"></i> Products</a>
+            <a href="<?php echo htmlspecialchars(adminLink('products', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'products' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-mobile-alt mr-4"></i> Products</a>
             <a href="<?php echo htmlspecialchars(adminLink('customers', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'customers' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-users mr-4"></i> Customers</a>
             <a href="<?php echo htmlspecialchars(adminLink('orders', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'orders' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-bag-shopping mr-4"></i> Orders</a>
             <a href="<?php echo htmlspecialchars(adminLink('add-product', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'add-product' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-plus-circle mr-4"></i> Add Product</a>
+            <a href="<?php echo htmlspecialchars(adminLink('edit-product', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'edit-product' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-pen-to-square mr-4"></i> Edit Product</a>
         </nav>
         <div class="mt-auto pt-8">
-            <a href="logout.php" class="flex items-center rounded-2xl px-5 py-4 font-bold text-red-500 transition hover:bg-red-50"><i class="fas fa-power-off mr-4"></i> Logout</a>
+            <a href="logout.php" class="flex items-center rounded-2xl border border-red-100 bg-red-50/70 px-5 py-4 font-bold text-red-500 transition hover:bg-red-100"><i class="fas fa-power-off mr-4"></i> Logout</a>
         </div>
     </aside>
 
@@ -280,14 +308,16 @@ function orderStatusBadgeClass(string $status): string
                     <?php elseif ($section === 'products'): ?>All <span class="text-indigo-600">Products</span>
                     <?php elseif ($section === 'customers'): ?>Customer <span class="text-indigo-600">Directory</span>
                     <?php elseif ($section === 'orders'): ?>Order <span class="text-indigo-600">Management</span>
-                    <?php else: ?>Add New <span class="text-indigo-600">Product</span><?php endif; ?>
+                    <?php elseif ($section === 'add-product'): ?>Add New <span class="text-indigo-600">Product</span>
+                    <?php else: ?>Edit Existing <span class="text-indigo-600">Products</span><?php endif; ?>
                 </h1>
                 <p class="mt-2 text-lg text-slate-500">
                     <?php if ($section === 'dashboard'): ?>Welcome back, Super Admin
                     <?php elseif ($section === 'products'): ?>Browse every product card currently in the store
                     <?php elseif ($section === 'customers'): ?>See registered customers and their order activity
                     <?php elseif ($section === 'orders'): ?>Review all orders placed on the store
-                    <?php else: ?>Use the admin panel form to publish a new product instantly<?php endif; ?>
+                    <?php elseif ($section === 'add-product'): ?>Use the admin panel form to publish a new product instantly
+                    <?php else: ?>Open any product below, update its details, and save changes directly to the database<?php endif; ?>
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-4">
@@ -421,7 +451,7 @@ function orderStatusBadgeClass(string $status): string
                     </div>
                 <?php endif; ?>
             </section>
-        <?php else: ?>
+        <?php elseif ($section === 'add-product'): ?>
             <section class="grid grid-cols-1 gap-8 xl:grid-cols-3">
                 <div class="panel-card rounded-[2.25rem] border border-slate-100 p-8 shadow-sm xl:col-span-2">
                     <h2 class="mb-8 text-3xl font-bold text-slate-800">Product Form</h2>
@@ -453,6 +483,81 @@ function orderStatusBadgeClass(string $status): string
                         </div>
                     <?php endif; ?>
                 </div>
+            </section>
+        <?php else: ?>
+            <section class="panel-card rounded-[2.25rem] border border-slate-100 p-8 shadow-sm">
+                <div class="mb-8 flex items-center justify-between">
+                    <h2 class="text-3xl font-bold text-slate-800">Edit Products</h2>
+                    <span class="rounded-full bg-indigo-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-indigo-600"><?php echo count($allProducts); ?> Items</span>
+                </div>
+                <?php if (empty($allProducts)): ?>
+                    <p class="rounded-[1.5rem] bg-slate-50 px-6 py-12 text-center text-slate-500">No products found.</p>
+                <?php else: ?>
+                    <div class="space-y-6">
+                        <?php foreach ($allProducts as $product): ?>
+                            <form method="POST" action="<?php echo htmlspecialchars(adminLink('edit-product', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-[2rem] border border-slate-100 bg-slate-50/80 p-6 transition hover:border-slate-200 hover:bg-white hover:shadow-lg">
+                                <input type="hidden" name="update_product" value="1">
+                                <input type="hidden" name="product_id" value="<?php echo (int) $product['product_id']; ?>">
+                                <div class="mb-6 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex h-24 w-24 items-center justify-center rounded-[1.5rem] bg-white p-3 shadow-sm">
+                                            <img src="<?php echo htmlspecialchars((string) ($product['image_url'] ?: 'https://via.placeholder.com/160x160?text=No+Image'), ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars((string) $product['name'], ENT_QUOTES, 'UTF-8'); ?>" class="h-full w-full object-contain">
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-bold uppercase tracking-[0.25em] text-indigo-600"><?php echo htmlspecialchars((string) $product['brand'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                            <h3 class="mt-2 text-2xl font-bold text-slate-800"><?php echo htmlspecialchars((string) $product['name'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                                            <p class="mt-1 text-sm text-slate-400">Product ID: #<?php echo (int) $product['product_id']; ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="rounded-full px-3 py-1 text-xs font-bold <?php echo (int) $product['is_active'] === 1 ? 'bg-green-50 text-green-600' : 'bg-slate-200 text-slate-500'; ?>">
+                                            <?php echo (int) $product['is_active'] === 1 ? 'Active' : 'Hidden'; ?>
+                                        </span>
+                                        <a href="product.php?id=<?php echo (int) $product['product_id']; ?>" class="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-indigo-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-indigo-50">Preview</a>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                    <div>
+                                        <label class="mb-2 block text-sm font-bold text-slate-700">Product Name</label>
+                                        <input type="text" name="name" value="<?php echo htmlspecialchars((string) $product['name'], ENT_QUOTES, 'UTF-8'); ?>" required class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 focus:border-indigo-500 focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="mb-2 block text-sm font-bold text-slate-700">Brand</label>
+                                        <input type="text" name="brand" value="<?php echo htmlspecialchars((string) $product['brand'], ENT_QUOTES, 'UTF-8'); ?>" required class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 focus:border-indigo-500 focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="mb-2 block text-sm font-bold text-slate-700">Regular Price</label>
+                                        <input type="number" step="0.01" name="regular_price" value="<?php echo htmlspecialchars((string) $product['regular_price'], ENT_QUOTES, 'UTF-8'); ?>" required class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 focus:border-indigo-500 focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="mb-2 block text-sm font-bold text-slate-700">Discount Price</label>
+                                        <input type="number" step="0.01" name="discounted_price" value="<?php echo $product['discounted_price'] !== null ? htmlspecialchars((string) $product['discounted_price'], ENT_QUOTES, 'UTF-8') : ''; ?>" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 focus:border-indigo-500 focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="mb-2 block text-sm font-bold text-slate-700">Stock Quantity</label>
+                                        <input type="number" name="stock_quantity" value="<?php echo (int) $product['stock_quantity']; ?>" required class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 focus:border-indigo-500 focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="mb-2 block text-sm font-bold text-slate-700">Image URL</label>
+                                        <input type="url" name="image_url" value="<?php echo htmlspecialchars((string) ($product['image_url'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 focus:border-indigo-500 focus:outline-none">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="mb-2 block text-sm font-bold text-slate-700">Description</label>
+                                        <textarea name="description" rows="4" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 focus:border-indigo-500 focus:outline-none"><?php echo htmlspecialchars((string) ($product['description'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></textarea>
+                                    </div>
+                                    <div class="md:col-span-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                        <label class="flex items-center text-sm font-bold text-slate-700">
+                                            <input type="checkbox" name="is_active" <?php echo (int) $product['is_active'] === 1 ? 'checked' : ''; ?> class="mr-3 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                            Active Product
+                                        </label>
+                                        <button type="submit" class="rounded-2xl bg-indigo-600 px-8 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-500">Save Changes</button>
+                                    </div>
+                                </div>
+                            </form>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </section>
         <?php endif; ?>
     </main>

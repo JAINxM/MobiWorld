@@ -59,7 +59,7 @@ if (!empty($product['specs'])) {
             </div>
         </div>
 
-        <div>
+        <div data-product-id="<?php echo $productId; ?>">
             <div class="flex items-center space-x-2 mb-4">
                 <span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-widest">
                     <?php echo htmlspecialchars((string)$product['brand'], ENT_QUOTES, 'UTF-8'); ?>
@@ -116,7 +116,11 @@ if (!empty($product['specs'])) {
                     </span>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <button type="button" id="product-wishlist-btn" onclick="toggleWishlist(productId, this)"
+                        class="wishlist-btn flex-1 py-4 bg-white text-red-500 rounded-2xl font-bold text-lg border border-red-100 hover:bg-red-500 hover:text-white transition-all transform active:scale-95 flex items-center justify-center shadow-sm">
+                        <i class="far fa-heart mr-3 font-bold"></i> Wishlist
+                    </button>
                     <button type="button" onclick="addToCartFromProduct()" <?php echo $stock <= 0 ? 'disabled' : ''; ?>
                         class="flex-1 py-4 bg-slate-800 text-white rounded-2xl font-bold text-lg hover:bg-black transition-all transform active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                         <i class="fas fa-shopping-cart mr-3"></i> Add to Cart
@@ -190,6 +194,33 @@ async function buyNowFromProduct() {
         updateCartCount();
     }
 }
+
+async function syncProductWishlistButton() {
+    const wishlistBtn = document.getElementById('product-wishlist-btn');
+    if (!wishlistBtn) return;
+
+    try {
+        const data = await apiCall('GET', 'wishlist_get.php', null, { redirectOn401: false, showLoader: false });
+        const isWishlisted = (data.wishlist || []).some(item => Number(item.id) === Number(productId));
+        wishlistBtn.classList.toggle('liked', isWishlisted);
+        const icon = wishlistBtn.querySelector('i');
+        if (icon) {
+            icon.className = isWishlisted ? 'fas fa-heart mr-3 font-bold' : 'far fa-heart mr-3 font-bold';
+        }
+    } catch (err) {
+        // Silent fail
+    }
+}
+
+syncProductWishlistButton();
 </script>
+
+<style>
+    .wishlist-btn.liked {
+        background-color: #ef4444;
+        color: #fff;
+        border-color: #ef4444;
+    }
+</style>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

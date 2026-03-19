@@ -19,12 +19,12 @@ if (!isLoggedIn()) {
         Discover the latest smartphone innovations. From high-end flagships to budget-friendly powerhouses.
     </p>
     <div class="flex flex-wrap justify-center gap-4">
-        <a href="#products" class="px-8 py-4 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-secondary transition-all transform hover:-translate-y-1">
+        <button type="button" onclick="applyHeroFilter('all')" class="hero-filter-btn hero-filter-btn-active min-w-[12rem] justify-center rounded-2xl px-8 py-4 font-bold transition-all transform hover:-translate-y-1 inline-flex items-center">
             Shop Collections
-        </a>
-        <a href="#" class="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all transform hover:-translate-y-1">
+        </button>
+        <button type="button" onclick="applyHeroFilter('offers')" class="hero-filter-btn hero-filter-btn-active min-w-[12rem] justify-center rounded-2xl px-8 py-4 font-bold transition-all transform hover:-translate-y-1 inline-flex items-center">
             View Offers
-        </a>
+        </button>
     </div>
 </section>
 
@@ -53,6 +53,7 @@ if (!isLoggedIn()) {
 <script>
 let allProducts = [];
 let activeBrand = 'All';
+let activeHeroFilter = 'all';
 
 function renderProducts(products) {
   const grid = document.getElementById('products-grid');
@@ -60,7 +61,7 @@ function renderProducts(products) {
   if (!products.length) {
     grid.innerHTML = `
       <div class="col-span-full rounded-[2rem] border border-dashed border-slate-300 bg-white/80 px-8 py-16 text-center shadow-sm">
-        <p class="text-lg font-bold text-slate-700">No smartphones found for ${activeBrand}</p>
+        <p class="text-lg font-bold text-slate-700">No smartphones found for this selection</p>
         <p class="mt-2 text-sm text-slate-500">Try another brand filter to explore more devices.</p>
       </div>
     `;
@@ -77,9 +78,10 @@ function renderProducts(products) {
           </button>
         </div>
         <div class="absolute bottom-4 left-4">
-          <span class="bg-white/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-slate-700 border border-white/40 uppercase tracking-widest">
-            New Arrival
-          </span>
+          ${product.has_discount
+            ? `<span class="bg-emerald-500/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white border border-white/40 uppercase tracking-widest shadow-lg">Offer Live</span>`
+            : `<span class="bg-white/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-slate-700 border border-white/40 uppercase tracking-widest">New Arrival</span>`
+          }
         </div>
       </div>
       <div class="p-8 flex flex-col flex-grow">
@@ -128,15 +130,39 @@ function setActiveBrandButton(activeButton = null, brand = 'All') {
   });
 }
 
+function getFilteredProducts() {
+  const normalizedBrand = normalizeBrandName(activeBrand);
+  return allProducts.filter(product => {
+    const matchesBrand = normalizedBrand === 'all'
+      ? true
+      : normalizeBrandName(product.brand).includes(normalizedBrand);
+    const matchesOffer = activeHeroFilter === 'offers'
+      ? Boolean(product.has_discount)
+      : true;
+    return matchesBrand && matchesOffer;
+  });
+}
+
+function setActiveHeroButton(mode = 'all') {
+  document.querySelectorAll('.hero-filter-btn').forEach(button => {
+    const isOffersButton = button.textContent.trim().toLowerCase() === 'view offers';
+    const isActive = mode === 'offers' ? isOffersButton : !isOffersButton;
+    button.classList.toggle('hero-filter-btn-active', isActive);
+    button.classList.toggle('hero-filter-btn-inactive', !isActive);
+    button.classList.toggle('offers-active', isActive && isOffersButton);
+  });
+}
+
 function applyBrandFilter(brand, clickedButton = null) {
   activeBrand = brand;
-  const normalizedBrand = normalizeBrandName(brand);
-  const filteredProducts = normalizedBrand === 'all'
-    ? allProducts
-    : allProducts.filter(product => normalizeBrandName(product.brand).includes(normalizedBrand));
-
-  renderProducts(filteredProducts);
+  renderProducts(getFilteredProducts());
   setActiveBrandButton(clickedButton, brand);
+}
+
+function applyHeroFilter(mode = 'all') {
+  activeHeroFilter = mode;
+  renderProducts(getFilteredProducts());
+  setActiveHeroButton(mode);
 }
 
 async function loadProducts() {
@@ -144,6 +170,7 @@ async function loadProducts() {
     const data = await apiCall('GET', 'products.php');
     allProducts = data.products || [];
     applyBrandFilter(activeBrand);
+    setActiveHeroButton(activeHeroFilter);
     showToast('Products loaded!');
   } catch (err) {
     document.getElementById('products-grid').innerHTML = '<p class="col-span-full text-center text-slate-500 py-20">Failed to load products. <button onclick="loadProducts()" class="text-primary underline">Retry</button></p>';
@@ -192,6 +219,29 @@ loadProducts();
     .wishlist-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+    .hero-filter-btn {
+      min-height: 56px;
+      border: 1px solid transparent;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    }
+    .hero-filter-btn-active {
+      background: #6366f1;
+      color: #fff;
+      box-shadow: 0 18px 35px rgba(99, 102, 241, 0.24);
+    }
+    .hero-filter-btn-active:hover {
+      background: #4f46e5;
+      color: #fff;
+    }
+    .hero-filter-btn-inactive {
+      background: #fff;
+      color: #334155;
+      border-color: #e2e8f0;
+    }
+    .hero-filter-btn-inactive:hover {
+      background: #f8fafc;
+      color: #0f172a;
     }
 </style>
 

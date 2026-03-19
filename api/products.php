@@ -34,6 +34,9 @@ try {
             'name' => (string)($r['name'] ?? 'Unknown Product'),
             'brand' => (string)($r['brand'] ?? 'Unknown Brand'),
             'price' => $price,
+            'regular_price' => (float)$r['regular_price'],
+            'discounted_price' => $r['discounted_price'] !== null ? (float)$r['discounted_price'] : null,
+            'has_discount' => $r['discounted_price'] !== null && (float)$r['discounted_price'] > 0 && (float)$r['discounted_price'] < (float)$r['regular_price'],
             'description' => $r['description'] ?? 'No description available',
             'image' => $r['image_url'] ?? 'https://via.placeholder.com/400x400?text=No+Image',
             'stock' => (int)($r['stock_quantity'] ?? 0),
@@ -46,4 +49,3 @@ try {
     jsonResponse(['success' => false, 'error' => 'Products failed: ' . $e->getMessage()], 500);
 }
 ?>
-
