@@ -11,18 +11,18 @@ if (!isLoggedIn()) {
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <!-- Hero Section -->
-<section class="mb-16 text-center py-10">
-    <h1 class="text-5xl md:text-6xl font-extrabold text-slate-800 mb-6 tracking-tight">
+<section class="mb-12 md:mb-16 text-center py-8 md:py-10">
+    <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-800 mb-6 tracking-tight">
         Future is in your <span class="bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Hand</span>.
     </h1>
-    <p class="text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+    <p class="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed">
         Discover the latest smartphone innovations. From high-end flagships to budget-friendly powerhouses.
     </p>
-    <div class="flex flex-wrap justify-center gap-4">
-        <button type="button" onclick="applyHeroFilter('all')" class="hero-filter-btn hero-filter-btn-active min-w-[12rem] justify-center rounded-2xl px-8 py-4 font-bold transition-all transform hover:-translate-y-1 inline-flex items-center">
+    <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
+        <button type="button" onclick="applyHeroFilter('all')" class="hero-filter-btn hero-filter-btn-active w-full sm:w-auto min-w-[12rem] justify-center rounded-2xl px-8 py-4 font-bold transition-all transform hover:-translate-y-1 inline-flex items-center">
             Shop Collections
         </button>
-        <button type="button" onclick="applyHeroFilter('offers')" class="hero-filter-btn hero-filter-btn-active min-w-[12rem] justify-center rounded-2xl px-8 py-4 font-bold transition-all transform hover:-translate-y-1 inline-flex items-center">
+        <button type="button" onclick="applyHeroFilter('offers')" class="hero-filter-btn hero-filter-btn-active w-full sm:w-auto min-w-[12rem] justify-center rounded-2xl px-8 py-4 font-bold transition-all transform hover:-translate-y-1 inline-flex items-center">
             View Offers
         </button>
     </div>
@@ -31,14 +31,14 @@ if (!isLoggedIn()) {
 <!-- Mobile Brands Filter (Visual only) -->
 <div id="brand-filters" class="flex overflow-x-auto pb-8 mb-10 gap-4 no-scrollbar">
     <?php
-    $brands = ['All', 'Apple', 'Samsung', 'Google', 'OnePlus', 'Xiaomi', 'Sony', 'Asus'];
+    $brands = ['All', 'Apple', 'Samsung', 'Google', 'OnePlus', 'Xiaomi', 'Vivo', 'Oppo', 'Realme', 'iQOO', 'Asus'];
     foreach ($brands as $brand):
     ?>
         <button
             type="button"
             data-brand="<?php echo htmlspecialchars($brand, ENT_QUOTES, 'UTF-8'); ?>"
             onclick="applyBrandFilter('<?php echo htmlspecialchars($brand, ENT_QUOTES, 'UTF-8'); ?>', this)"
-            class="brand-filter px-6 py-2 rounded-full whitespace-nowrap font-semibold border transition <?php echo $brand === 'All' ? 'border-primary bg-primary text-white shadow-lg shadow-indigo-200' : 'border-slate-200 bg-white text-slate-600 hover:border-primary hover:text-primary'; ?>"
+            class="brand-filter px-6 py-2 rounded-full whitespace-nowrap font-semibold border transition <?php echo $brand === 'All' ? 'border-primary bg-primary text-white shadow-lg shadow-indigo-200' : 'border-slate-200 bg-white text-slate-600 hover:border-primary hover:text-black'; ?>"
         >
             <?php echo $brand; ?>
         </button>
@@ -46,7 +46,7 @@ if (!isLoggedIn()) {
 </div>
 
 <!-- Product Grid -->
-<div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+<div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
     Loading products...
 </div>
 
@@ -70,7 +70,7 @@ function renderProducts(products) {
 
   grid.innerHTML = products.map(product => `
     <div class="group bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 flex flex-col h-full transform hover:-translate-y-2" data-product-id="${product.id}" data-brand="${product.brand}">
-      <div class="relative overflow-hidden h-64 bg-slate-50">
+      <div class="relative overflow-hidden h-56 md:h-64 bg-slate-50">
         <img src="${product.image}" alt="${product.name}" class="w-full h-full object-contain p-6 transform group-hover:scale-110 transition-transform duration-500">
         <div class="absolute top-4 right-4 translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
           <button class="wishlist-btn w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-500 shadow-lg hover:bg-red-500 hover:text-white transition liked:bg-red-500 liked:text-white" onclick="toggleWishlist(${product.id}, this)">
@@ -232,7 +232,7 @@ loadProducts();
     }
     .hero-filter-btn-active:hover {
       background: #4f46e5;
-      color: #fff;
+      color: #000;
     }
     .hero-filter-btn-inactive {
       background: #fff;
@@ -242,6 +242,9 @@ loadProducts();
     .hero-filter-btn-inactive:hover {
       background: #f8fafc;
       color: #0f172a;
+    }
+    .brand-filter:hover {
+      color: #000 !important;
     }
 </style>
 

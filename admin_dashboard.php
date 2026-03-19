@@ -301,6 +301,23 @@ function orderStatusBadgeClass(string $status): string
     </aside>
 
     <main class="flex-1 p-4 md:p-8 xl:p-10">
+        <div class="mb-6 lg:hidden">
+            <div class="panel-card rounded-[1.75rem] border border-slate-200/80 p-4 shadow-sm">
+                <div class="mb-4 flex items-center justify-between">
+                    <a href="admin_dashboard.php" class="text-2xl font-extrabold bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">MobiWorld Admin</a>
+                    <a href="logout.php" class="rounded-full bg-red-50 px-4 py-2 text-sm font-bold text-red-500 transition hover:bg-red-100">Logout</a>
+                </div>
+                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    <a href="<?php echo htmlspecialchars(adminLink('dashboard', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl px-4 py-3 text-center text-sm font-bold <?php echo $section === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600'; ?>">Dashboard</a>
+                    <a href="<?php echo htmlspecialchars(adminLink('products', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl px-4 py-3 text-center text-sm font-bold <?php echo $section === 'products' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600'; ?>">Products</a>
+                    <a href="<?php echo htmlspecialchars(adminLink('customers', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl px-4 py-3 text-center text-sm font-bold <?php echo $section === 'customers' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600'; ?>">Customers</a>
+                    <a href="<?php echo htmlspecialchars(adminLink('orders', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl px-4 py-3 text-center text-sm font-bold <?php echo $section === 'orders' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600'; ?>">Orders</a>
+                    <a href="<?php echo htmlspecialchars(adminLink('add-product', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl px-4 py-3 text-center text-sm font-bold <?php echo $section === 'add-product' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600'; ?>">Add Product</a>
+                    <a href="<?php echo htmlspecialchars(adminLink('edit-product', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl px-4 py-3 text-center text-sm font-bold <?php echo $section === 'edit-product' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600'; ?>">Edit Product</a>
+                </div>
+            </div>
+        </div>
+
         <header class="mb-10 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
                 <h1 class="text-4xl font-extrabold tracking-tight text-slate-800">

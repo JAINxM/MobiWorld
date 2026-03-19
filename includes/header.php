@@ -68,9 +68,9 @@ if (!function_exists('isAdminLoggedIn')) {
 </head>
 <body class="gradient-bg min-h-screen">
 
-<nav class="glass sticky top-0 z-50 py-4 px-6 mb-8 shadow-sm">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <a href="index.php" class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary flex items-center">
+<nav class="glass sticky top-0 z-50 mb-6 px-4 py-4 shadow-sm md:mb-8 md:px-6">
+    <div class="max-w-7xl mx-auto flex justify-between items-center gap-4">
+        <a href="index.php" class="shrink-0 text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary flex items-center">
             <i class="fas fa-mobile-alt mr-2"></i>MobiWorld
         </a>
 
@@ -104,7 +104,7 @@ if (!function_exists('isAdminLoggedIn')) {
         </div>
     </div>
 
-    <div id="mobile-menu" class="hidden md:hidden mt-4 bg-white rounded-xl p-4 shadow-xl border border-slate-100 flex-col space-y-4">
+    <div id="mobile-menu" class="hidden md:hidden mt-4 bg-white rounded-2xl p-4 shadow-xl border border-slate-100 flex-col space-y-4">
         <a href="index.php" class="block font-medium text-slate-700">Home</a>
         <a href="cart.php" class="block font-medium text-slate-700 relative">
             Cart

@@ -24,7 +24,7 @@ async function loadCart() {
     const container = document.getElementById('cart-container');
     if (data.cart.length === 0) {
       container.innerHTML = `
-        <div class="bg-white rounded-[3rem] p-20 text-center shadow-xl border border-slate-100">
+        <div class="bg-white rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-20 text-center shadow-xl border border-slate-100">
           <div class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8 text-slate-300">
             <i class="fas fa-shopping-basket text-5xl"></i>
           </div>
@@ -38,9 +38,10 @@ async function loadCart() {
       return;
     }
     container.innerHTML = `
+      <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
       <div class="lg:col-span-2 space-y-6">
         ${data.cart.map(item => `
-          <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col md:flex-row items-center gap-8 relative group">
+          <div class="bg-white p-5 md:p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col md:flex-row items-center gap-6 md:gap-8 relative group">
             <div class="w-32 h-32 bg-slate-50 rounded-2xl p-4 flex-shrink-0">
               <img src="${item.image}" alt="${item.name}" class="w-full h-full object-contain">
             </div>
@@ -58,7 +59,7 @@ async function loadCart() {
                 <i class="fas fa-plus text-xs"></i>
               </button>
             </div>
-            <div class="text-xl font-bold text-slate-900 w-24 text-right">
+            <div class="text-xl font-bold text-slate-900 w-auto md:w-24 text-center md:text-right">
               $${item.subtotal.toLocaleString()}
             </div>
             <button onclick="removeCartItem(${item.product_id})" class="absolute top-4 right-4 md:static text-slate-300 hover:text-red-500 transition text-xl">
@@ -76,7 +77,7 @@ async function loadCart() {
         </div>
       </div>
       <div class="lg:col-span-1">
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 sticky top-32">
+        <div class="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-xl border border-slate-100 lg:sticky lg:top-32">
           <h3 class="text-2xl font-bold text-slate-800 mb-8">Order Summary</h3>
           <div class="space-y-4 mb-8">
             <div class="flex justify-between text-slate-500">
@@ -107,6 +108,7 @@ async function loadCart() {
             <i class="fab fa-cc-apple-pay text-3xl"></i>
           </div>
         </div>
+      </div>
       </div>
     `;
   } catch (err) {

@@ -48,11 +48,11 @@ if (!empty($product['specs'])) {
     </a>
 </div>
 
-<div class="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 mb-20 p-8 md:p-16">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div class="bg-white rounded-[2.5rem] md:rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 mb-20 p-5 sm:p-8 md:p-12 lg:p-16">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
         <div class="relative group">
             <div class="absolute -inset-4 bg-gradient-to-tr from-primary/10 to-secondary/10 rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
-            <div class="relative bg-slate-50 rounded-[2.5rem] p-12 flex items-center justify-center">
+            <div class="relative bg-slate-50 rounded-[2rem] md:rounded-[2.5rem] p-6 sm:p-8 md:p-12 flex items-center justify-center">
                 <img src="<?php echo htmlspecialchars((string)($product['image_url'] ?: 'https://via.placeholder.com/400x400?text=No+Image'), ENT_QUOTES, 'UTF-8'); ?>"
                     alt="<?php echo htmlspecialchars((string)$product['name'], ENT_QUOTES, 'UTF-8'); ?>"
                     class="w-full max-w-md object-contain transform hover:scale-105 transition duration-500">
@@ -67,9 +67,9 @@ if (!empty($product['specs'])) {
                 <span class="text-slate-400 text-sm">SKU: MW-<?php echo str_pad((string)$productId, 5, '0', STR_PAD_LEFT); ?></span>
             </div>
 
-            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 mb-6"><?php echo htmlspecialchars((string)$product['name'], ENT_QUOTES, 'UTF-8'); ?></h1>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-800 mb-6"><?php echo htmlspecialchars((string)$product['name'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-            <div class="flex items-center space-x-4 mb-8">
+            <div class="flex flex-wrap items-center gap-3 md:gap-4 mb-8">
                 <span class="text-4xl font-extrabold text-primary">$<?php echo number_format($displayPrice, 2); ?></span>
                 <?php if ($discountedPrice !== null && $discountedPrice > 0 && $regularPrice > $discountedPrice): ?>
                     <span class="text-xl text-slate-400 line-through">$<?php echo number_format($regularPrice, 2); ?></span>
@@ -88,7 +88,7 @@ if (!empty($product['specs'])) {
                     <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
                         <i class="fas fa-list-ul mr-3 text-primary"></i> Technical Specifications
                     </h3>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <?php foreach ($specs as $key => $val): ?>
                             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                 <span class="block text-xs text-slate-400 uppercase font-bold tracking-wider mb-1"><?php echo htmlspecialchars((string)$key, ENT_QUOTES, 'UTF-8'); ?></span>
@@ -100,8 +100,8 @@ if (!empty($product['specs'])) {
             <?php endif; ?>
 
             <div class="space-y-6">
-                <div class="flex items-center space-x-6">
-                    <div class="flex items-center bg-slate-100 rounded-2xl p-1">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                    <div class="flex items-center bg-slate-100 rounded-2xl p-1 w-fit">
                         <button type="button" onclick="decrementQty()" class="w-12 h-12 flex items-center justify-center text-slate-600 hover:bg-white hover:rounded-xl hover:shadow-sm transition">
                             <i class="fas fa-minus"></i>
                         </button>

@@ -47,12 +47,12 @@ if (function_exists('isLoggedIn') && isLoggedIn($pdo)) {
 <body class="gradient-bg min-h-screen">
 <script src="assets/js/app.js"></script>
 
-<header class="glass sticky top-0 z-50 mb-8 px-6 py-4 shadow-sm">
-    <div class="mx-auto flex max-w-7xl items-center justify-between">
-        <a href="index.php" class="flex items-center text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+<header class="glass sticky top-0 z-50 mb-8 px-4 md:px-6 py-4 shadow-sm">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
+        <a href="index.php" class="flex items-center text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             <i class="fas fa-mobile-alt mr-2"></i>MobiWorld
         </a>
-        <div class="flex items-center gap-3 text-sm font-medium text-slate-600">
+        <div class="flex items-center gap-2 sm:gap-3 text-sm font-medium text-slate-600">
             <span class="hidden sm:inline text-slate-500">Need an account?</span>
             <a href="register.php" class="rounded-full bg-primary px-5 py-2 text-white shadow-lg shadow-indigo-200 transition hover:bg-secondary">Register</a>
         </div>
@@ -62,7 +62,7 @@ if (function_exists('isLoggedIn') && isLoggedIn($pdo)) {
 <main class="max-w-7xl mx-auto px-4 md:px-6 py-10">
 
     <div class="flex items-center justify-center min-h-[70vh]">
-        <div class="bg-white p-8 md:p-12 rounded-3xl shadow-2xl w-full max-w-md border border-slate-100 transform transition-all hover:scale-[1.01]">
+        <div class="bg-white p-6 sm:p-8 md:p-12 rounded-3xl shadow-2xl w-full max-w-md border border-slate-100 transform transition-all hover:scale-[1.01]">
             <div class="text-center mb-10">
                 <h1 class="text-4xl font-extrabold text-slate-800 mb-2">Welcome Back</h1>
                 <p class="text-slate-500">Enter your credentials to access your account</p>

@@ -10,17 +10,17 @@ if (!isLoggedIn()) {
 
 <?php include __DIR__ . '/includes/header.php'; ?>
 
-<div class="mb-16">
-    <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 mb-6 tracking-tight">
+<div class="mb-12 md:mb-16">
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-800 mb-4 md:mb-6 tracking-tight">
         <i class="fas fa-heart text-pink-500 mr-4"></i>My Wishlist
     </h1>
-    <p class="text-xl text-slate-500 max-w-2xl leading-relaxed">
+    <p class="text-lg md:text-xl text-slate-500 max-w-2xl leading-relaxed">
         Products you've loved. Ready to make them yours?
     </p>
 </div>
 
 <!-- Product Grid -->
-<div id="wishlist-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+<div id="wishlist-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
     Loading wishlist...
 </div>
 
@@ -32,7 +32,7 @@ async function loadWishlistProducts() {
     
     if (data.count === 0) {
       grid.innerHTML = `
-        <div class="col-span-full text-center py-20">
+        <div class="col-span-full text-center py-14 md:py-20">
           <i class="fas fa-heart-broken text-6xl text-slate-300 mb-6"></i>
           <h3 class="text-2xl font-bold text-slate-700 mb-2">Your wishlist is empty</h3>
           <p class="text-slate-500 mb-8">Like some products on the home page to see them here.</p>
@@ -46,7 +46,7 @@ async function loadWishlistProducts() {
 
     grid.innerHTML = data.wishlist.map(product => `
       <div class="group bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 flex flex-col h-full transform hover:-translate-y-2" data-product-id="${product.id}">
-        <div class="relative overflow-hidden h-64 bg-slate-50">
+        <div class="relative overflow-hidden h-56 md:h-64 bg-slate-50">
           <img src="${product.image}" alt="${product.name}" class="w-full h-full object-contain p-6 transform group-hover:scale-110 transition-transform duration-500">
           <div class="absolute top-4 right-4 translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
             <button class="wishlist-btn w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-500 shadow-lg hover:bg-red-500 hover:text-white transition liked:bg-red-500 liked:text-white" onclick="toggleWishlist(${product.id}, this)">

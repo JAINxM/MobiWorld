@@ -92,7 +92,7 @@ if (!empty($orderIds)) {
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
-    <div class="lg:col-span-1 space-y-8">
+    <div class="lg:col-span-1 lg:sticky lg:top-28 h-fit space-y-8">
         <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 text-center">
             <div class="w-24 h-24 bg-gradient-to-tr from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-6 text-white text-3xl font-bold shadow-lg">
                 <?php echo htmlspecialchars(strtoupper(substr((string)$user['full_name'], 0, 1)), ENT_QUOTES, 'UTF-8'); ?>
