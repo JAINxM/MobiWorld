@@ -65,15 +65,21 @@ if (!empty($orderIds)) {
     $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
     $itemsStmt = $pdo->prepare(
         "SELECT
+            oi.order_item_id,
             oi.order_id,
             oi.product_id,
             oi.quantity,
             oi.price_at_time,
             pm.name,
             pm.brand,
-            pm.image_url
+            pm.image_url,
+            pr.review_id AS existing_review_id,
+            pr.rating AS existing_rating
          FROM order_items oi
          INNER JOIN product_master pm ON pm.product_id = oi.product_id
+         LEFT JOIN product_reviews pr
+            ON pr.order_item_id = oi.order_item_id
+           AND pr.is_active = 1
          WHERE oi.order_id IN ($placeholders)
          ORDER BY oi.order_item_id DESC"
     );
@@ -169,8 +175,11 @@ if (!empty($orderIds)) {
                             <?php else: ?>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                                     <?php foreach ($items as $item): ?>
-                                        <a href="product.php?id=<?php echo (int)$item['product_id']; ?>"
-                                            class="group block rounded-[1.5rem] border border-slate-100 bg-slate-50 p-4 hover:border-primary hover:bg-white hover:shadow-lg transition-all">
+                                        <?php
+                                        $hasReview = !empty($item['existing_review_id']);
+                                        $productNameJson = json_encode((string) $item['name'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+                                        ?>
+                                        <div data-order-item-id="<?php echo (int)$item['order_item_id']; ?>" data-product-id="<?php echo (int)$item['product_id']; ?>" data-product-name="<?php echo htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8'); ?>" class="group block rounded-[1.5rem] border border-slate-100 bg-slate-50 p-4 hover:border-primary hover:bg-white hover:shadow-lg transition-all">
                                             <div class="mb-4 flex h-40 items-center justify-center rounded-[1.25rem] bg-white p-4">
                                                 <img src="<?php echo htmlspecialchars((string)($item['image_url'] ?: 'https://via.placeholder.com/300x300?text=No+Image'), ENT_QUOTES, 'UTF-8'); ?>"
                                                     alt="<?php echo htmlspecialchars((string)$item['name'], ENT_QUOTES, 'UTF-8'); ?>"
@@ -181,13 +190,27 @@ if (!empty($orderIds)) {
                                                 <h5 class="font-bold text-slate-800 line-clamp-2 min-h-[3rem]"><?php echo htmlspecialchars((string)$item['name'], ENT_QUOTES, 'UTF-8'); ?></h5>
                                                 <p class="text-sm text-slate-500">Qty: <?php echo (int)$item['quantity']; ?></p>
                                                 <p class="text-lg font-extrabold text-slate-900">$<?php echo number_format((float)$item['price_at_time'], 2); ?></p>
-                                                <span class="inline-flex items-center text-sm font-bold text-primary">
-                                                    Open Product
-                                                    <i class="fas fa-arrow-right ml-2 text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
-                                                </span>
+                                                <div class="flex gap-2 pt-2">
+                                                    <a href="product.php?id=<?php echo (int)$item['product_id']; ?>" class="inline-flex items-center text-sm font-bold text-primary hover:underline">
+                                                        Open Product
+                                                    </a>
+                                                    <?php if ((string)$order['order_status'] === 'delivered'): ?>
+                                                        <?php if ($hasReview): ?>
+                                                            <span class="inline-flex items-center px-3 py-1 bg-green-50 text-xs font-bold text-green-700 rounded-full whitespace-nowrap">
+                                                                <i class="fas fa-check-circle mr-1"></i> Reviewed <?php echo str_repeat('&#9733;', max(1, (int) $item['existing_rating'])); ?>
+                                                            </span>
+                                                        <?php else: ?>
+
+<button onclick='showReviewModal(<?php echo (int)$item['order_item_id']; ?>, "<?php echo addslashes((string)$item['name']); ?>", <?php echo (int)$item['product_id']; ?>)' class="inline-flex items-center px-3 py-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-xs font-bold text-slate-800 rounded-full hover:shadow-lg hover:shadow-yellow-200 transition-all whitespace-nowrap">
+                                                                 <i class="fas fa-star mr-1"></i> Rate & Review
+                                                             </button>
+                                                         <?php endif; ?>
+                                                     <?php endif; ?>
+                                                </div>
                                             </div>
-                                        </a>
+                                        </div>
                                     <?php endforeach; ?>
+
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -198,4 +221,6 @@ if (!empty($orderIds)) {
     </div>
 </div>
 
+    <script src="<?php echo appUrl('assets/js/review-functions.js'); ?>"></script>
 <?php include __DIR__ . '/includes/footer.php'; ?>
+

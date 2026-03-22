@@ -20,7 +20,7 @@ if (!isAdminLoggedIn()) {
     redirect('admin_login.php');
 }
 
-$validSections = ['dashboard', 'products', 'customers', 'orders', 'add-product', 'edit-product'];
+$validSections = ['dashboard', 'products', 'customers', 'orders', 'reviews', 'add-product', 'edit-product'];
 $section = isset($_GET['section']) ? (string) $_GET['section'] : 'dashboard';
 if (!in_array($section, $validSections, true)) {
     $section = 'dashboard';
@@ -55,6 +55,12 @@ switch ($filter) {
 
 $message = '';
 $error = '';
+$reviewTotals = [
+    'count' => 0,
+    'avg_rating' => 0.0,
+    'with_comment' => 0,
+];
+$adminReviews = [];
 $allowedOrderStatuses = ['pending', 'confirmed', 'out_for_delivery', 'delivered', 'cancelled'];
 $orderStatusLabels = [
     'pending' => 'Pending',
@@ -91,6 +97,27 @@ if ($section === 'orders' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' &&
             $message = 'Order #' . $orderId . ' updated to ' . ($orderStatusLabels[$newStatus] ?? ucfirst($newStatus)) . '.';
         } catch (Throwable $e) {
             $error = defined('APP_DEBUG') && APP_DEBUG ? $e->getMessage() : 'Failed to update order status.';
+        }
+    }
+}
+
+if ($section === 'reviews' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['delete_review'])) {
+    $reviewId = (int) ($_POST['review_id'] ?? 0);
+
+    if ($reviewId <= 0) {
+        $error = 'Invalid review delete request.';
+    } else {
+        try {
+            $deleteReviewStmt = $pdo->prepare('UPDATE product_reviews SET is_active = 0 WHERE review_id = ?');
+            $deleteReviewStmt->execute([$reviewId]);
+
+            if ($deleteReviewStmt->rowCount() > 0) {
+                $message = 'Review deleted successfully.';
+            } else {
+                $error = 'Review not found or already deleted.';
+            }
+        } catch (Throwable $e) {
+            $error = defined('APP_DEBUG') && APP_DEBUG ? $e->getMessage() : 'Failed to delete review.';
         }
     }
 }
@@ -243,6 +270,48 @@ $ordersQuery = 'SELECT ' . implode(', ', $ordersSelectParts) .
 $orders = $pdo->query($ordersQuery)->fetchAll();
 $recentProducts = array_slice($allProducts, 0, 5);
 
+try {
+    $reviewStatsStmt = $pdo->query(
+        'SELECT
+            COUNT(*) AS total_reviews,
+            COALESCE(AVG(rating), 0) AS avg_rating,
+            SUM(CASE WHEN review_text IS NOT NULL AND TRIM(review_text) <> "" THEN 1 ELSE 0 END) AS commented_reviews
+         FROM product_reviews
+         WHERE is_active = 1'
+    );
+    $reviewStats = $reviewStatsStmt->fetch();
+    if ($reviewStats) {
+        $reviewTotals['count'] = (int) ($reviewStats['total_reviews'] ?? 0);
+        $reviewTotals['avg_rating'] = round((float) ($reviewStats['avg_rating'] ?? 0), 1);
+        $reviewTotals['with_comment'] = (int) ($reviewStats['commented_reviews'] ?? 0);
+    }
+
+    $adminReviewsStmt = $pdo->query(
+        'SELECT
+            r.review_id,
+            r.rating,
+            r.review_text,
+            r.created_at,
+            oi.order_item_id,
+            oi.product_id,
+            o.order_id,
+            u.full_name AS reviewer_name,
+            u.email AS reviewer_email,
+            p.name AS product_name,
+            p.brand AS product_brand
+         FROM product_reviews r
+         INNER JOIN order_items oi ON oi.order_item_id = r.order_item_id
+         INNER JOIN orders o ON o.order_id = oi.order_id
+         INNER JOIN user_master u ON u.user_id = o.user_id
+         INNER JOIN product_master p ON p.product_id = oi.product_id
+         WHERE r.is_active = 1
+         ORDER BY r.created_at DESC'
+    );
+    $adminReviews = $adminReviewsStmt->fetchAll();
+} catch (Throwable $e) {
+    $adminReviews = [];
+}
+
 function adminLink(string $section, string $filter): string
 {
     return 'admin_dashboard.php?section=' . urlencode($section) . '&filter=' . urlencode($filter);
@@ -293,7 +362,10 @@ function orderStatusBadgeClass(string $status): string
             <a href="<?php echo htmlspecialchars(adminLink('customers', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'customers' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-users mr-4"></i> Customers</a>
             <a href="<?php echo htmlspecialchars(adminLink('orders', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'orders' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-bag-shopping mr-4"></i> Orders</a>
             <a href="<?php echo htmlspecialchars(adminLink('add-product', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'add-product' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-plus-circle mr-4"></i> Add Product</a>
-            <a href="<?php echo htmlspecialchars(adminLink('edit-product', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'edit-product' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-pen-to-square mr-4"></i> Edit Product</a>
+<a href="<?php echo htmlspecialchars(adminLink('edit-product', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'edit-product' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition"><i class="fas fa-pen-to-square mr-4"></i> Edit Product</a>
+            <a href="<?php echo htmlspecialchars(adminLink('reviews', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="sidebar-link <?php echo $section === 'reviews' ? 'active' : 'text-slate-500 hover:bg-slate-50'; ?> flex items-center rounded-2xl px-5 py-4 font-bold transition">
+                <i class="fas fa-star mr-4 text-yellow-500"></i> Reviews
+            </a>
         </nav>
         <div class="mt-auto pt-8">
             <a href="logout.php" class="flex items-center rounded-2xl border border-red-100 bg-red-50/70 px-5 py-4 font-bold text-red-500 transition hover:bg-red-100"><i class="fas fa-power-off mr-4"></i> Logout</a>
@@ -314,6 +386,7 @@ function orderStatusBadgeClass(string $status): string
                     <a href="<?php echo htmlspecialchars(adminLink('orders', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl px-4 py-3 text-center text-sm font-bold <?php echo $section === 'orders' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600'; ?>">Orders</a>
                     <a href="<?php echo htmlspecialchars(adminLink('add-product', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl px-4 py-3 text-center text-sm font-bold <?php echo $section === 'add-product' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600'; ?>">Add Product</a>
                     <a href="<?php echo htmlspecialchars(adminLink('edit-product', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl px-4 py-3 text-center text-sm font-bold <?php echo $section === 'edit-product' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600'; ?>">Edit Product</a>
+                    <a href="<?php echo htmlspecialchars(adminLink('reviews', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl px-4 py-3 text-center text-sm font-bold <?php echo $section === 'reviews' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-600'; ?>">Reviews</a>
                 </div>
             </div>
         </div>
@@ -325,6 +398,7 @@ function orderStatusBadgeClass(string $status): string
                     <?php elseif ($section === 'products'): ?>All <span class="text-indigo-600">Products</span>
                     <?php elseif ($section === 'customers'): ?>Customer <span class="text-indigo-600">Directory</span>
                     <?php elseif ($section === 'orders'): ?>Order <span class="text-indigo-600">Management</span>
+                    <?php elseif ($section === 'reviews'): ?>Review <span class="text-indigo-600">Moderation</span>
                     <?php elseif ($section === 'add-product'): ?>Add New <span class="text-indigo-600">Product</span>
                     <?php else: ?>Edit Existing <span class="text-indigo-600">Products</span><?php endif; ?>
                 </h1>
@@ -333,6 +407,7 @@ function orderStatusBadgeClass(string $status): string
                     <?php elseif ($section === 'products'): ?>Browse every product card currently in the store
                     <?php elseif ($section === 'customers'): ?>See registered customers and their order activity
                     <?php elseif ($section === 'orders'): ?>Review all orders placed on the store
+                    <?php elseif ($section === 'reviews'): ?>Read verified customer feedback and remove inappropriate reviews
                     <?php elseif ($section === 'add-product'): ?>Use the admin panel form to publish a new product instantly
                     <?php else: ?>Open any product below, update its details, and save changes directly to the database<?php endif; ?>
                 </p>
@@ -467,6 +542,73 @@ function orderStatusBadgeClass(string $status): string
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
+            </section>
+        <?php elseif ($section === 'reviews'): ?>
+            <section class="space-y-8">
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <div class="panel-card rounded-[2rem] border border-slate-100 p-6 shadow-sm">
+                        <p class="text-xs font-bold uppercase tracking-[0.25em] text-slate-400">Active Reviews</p>
+                        <p class="mt-3 text-4xl font-extrabold text-slate-800"><?php echo number_format($reviewTotals['count']); ?></p>
+                    </div>
+                    <div class="panel-card rounded-[2rem] border border-slate-100 p-6 shadow-sm">
+                        <p class="text-xs font-bold uppercase tracking-[0.25em] text-slate-400">Average Rating</p>
+                        <p class="mt-3 text-4xl font-extrabold text-slate-800"><?php echo number_format($reviewTotals['avg_rating'], 1); ?></p>
+                    </div>
+                    <div class="panel-card rounded-[2rem] border border-slate-100 p-6 shadow-sm">
+                        <p class="text-xs font-bold uppercase tracking-[0.25em] text-slate-400">Written Reviews</p>
+                        <p class="mt-3 text-4xl font-extrabold text-slate-800"><?php echo number_format($reviewTotals['with_comment']); ?></p>
+                    </div>
+                </div>
+
+                <div class="panel-card rounded-[2.25rem] border border-slate-100 p-8 shadow-sm">
+                    <div class="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h2 class="text-3xl font-bold text-slate-800">Customer Reviews</h2>
+                            <p class="mt-2 text-slate-500">Only admin can access this section. You can moderate reviews from here.</p>
+                        </div>
+                        <span class="rounded-full bg-yellow-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-yellow-700">Verified Purchase Only</span>
+                    </div>
+
+                    <?php if (empty($adminReviews)): ?>
+                        <p class="rounded-[1.5rem] bg-slate-50 px-6 py-12 text-center text-slate-500">No reviews found.</p>
+                    <?php else: ?>
+                        <div class="space-y-4">
+                            <?php foreach ($adminReviews as $review): ?>
+                                <div class="rounded-[1.75rem] border border-slate-100 bg-slate-50/70 p-5 transition hover:border-slate-200 hover:bg-white">
+                                    <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                                        <div class="space-y-3">
+                                            <div>
+                                                <p class="text-xs font-bold uppercase tracking-[0.25em] text-indigo-600"><?php echo htmlspecialchars((string) $review['product_brand'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                                <h3 class="mt-2 text-xl font-bold text-slate-800"><?php echo htmlspecialchars((string) $review['product_name'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                                                <p class="mt-1 text-sm text-slate-400">Product ID #<?php echo (int) $review['product_id']; ?> • Order #<?php echo (int) $review['order_id']; ?> • Item #<?php echo (int) $review['order_item_id']; ?></p>
+                                            </div>
+                                            <div class="text-2xl leading-none text-yellow-400"><?php echo str_repeat('&#9733;', max(0, min(5, (int) $review['rating']))); ?><?php echo str_repeat('&#9734;', max(0, 5 - min(5, (int) $review['rating']))); ?></div>
+                                            <div>
+                                                <p class="font-bold text-slate-800"><?php echo htmlspecialchars((string) $review['reviewer_name'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                                <p class="text-sm text-slate-400"><?php echo htmlspecialchars((string) $review['reviewer_email'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                            </div>
+                                            <p class="max-w-3xl text-sm leading-7 text-slate-600">
+                                                <?php echo htmlspecialchars((string) ($review['review_text'] !== null && trim((string) $review['review_text']) !== '' ? $review['review_text'] : 'Customer submitted a rating without any written review.'), ENT_QUOTES, 'UTF-8'); ?>
+                                            </p>
+                                        </div>
+
+                                        <div class="flex flex-col items-start gap-3 lg:items-end">
+                                            <p class="text-sm font-semibold text-slate-400"><?php echo date('M d, Y h:i A', strtotime((string) $review['created_at'])); ?></p>
+                                            <a href="product.php?id=<?php echo (int) $review['product_id']; ?>" class="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-indigo-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-indigo-50">Open Product</a>
+                                            <form method="POST" action="<?php echo htmlspecialchars(adminLink('reviews', $filter), ENT_QUOTES, 'UTF-8'); ?>" onsubmit="return confirm('Delete this review permanently?');">
+                                                <input type="hidden" name="delete_review" value="1">
+                                                <input type="hidden" name="review_id" value="<?php echo (int) $review['review_id']; ?>">
+                                                <button type="submit" class="rounded-2xl bg-red-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-red-100 transition hover:bg-red-600">
+                                                    Delete Review
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </section>
         <?php elseif ($section === 'add-product'): ?>
             <section class="grid grid-cols-1 gap-8 xl:grid-cols-3">

@@ -70,12 +70,39 @@ if (!function_exists('isAdminLoggedIn')) {
 
 <nav class="glass sticky top-0 z-50 mb-6 px-4 py-4 shadow-sm md:mb-8 md:px-6">
     <div class="max-w-7xl mx-auto flex justify-between items-center gap-4">
+
         <a href="index.php" class="shrink-0 text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary flex items-center">
             <i class="fas fa-mobile-alt mr-2"></i>MobiWorld
         </a>
 
+
+        <!-- Navbar Search + Filter -->
+        <div class="flex items-center gap-3 max-w-lg mx-4 flex-1">
+            <!-- Search -->
+            <div class="flex-1 relative">
+                <input 
+                    id="navbar-search" 
+                    type="text" 
+                    placeholder="Search products..." 
+                    class="w-full pl-12 pr-4 py-3 rounded-[1.5rem] border border-slate-200 focus:border-primary focus:outline-none bg-white/80 backdrop-blur text-slate-700 placeholder-slate-400 transition"
+                >
+            </div>
+            <!-- Filter -->
+
+<select id="navbar-filter" class="px-4 py-3 rounded-[1.5rem] border border-slate-200 focus:border-primary focus:outline-none bg-white/80 text-slate-700">
+
+
+                <option>All Products</option>
+                <option>Price Low-High</option>
+                <option>Price High-Low</option>
+                <option>Highest Rated</option>
+                <option>Newest First</option>
+            </select>
+        </div>
+
         <div class="hidden md:flex space-x-8 items-center">
             <a href="index.php" class="nav-link font-medium text-slate-700 hover:text-primary">Home</a>
+        </div>
             <a href="cart.php" class="nav-link font-medium text-slate-700 hover:text-primary relative">
                 Cart
                 <span class="cart-count absolute -top-2 -right-4 bg-red-500 text-white text-xs rounded-full w-5 h-5 hidden items-center justify-center animate-bounce">
@@ -84,7 +111,7 @@ if (!function_exists('isAdminLoggedIn')) {
             </a>
             <a href="wishlist.php" class="nav-link font-medium text-slate-700 hover:text-primary relative">
                 Wishlist
-                <span class="wishlist-count absolute -top-2 -right-4 bg-pink-500 text-white text-xs rounded-full w-5 h-5 hidden items-center justify-center animate-bounce">
+                <span class="wishlist-count absolute -top-2 -right-4 bg-red-500 text-white text-xs rounded-full w-5 h-5 hidden items-center justify-center animate-bounce">
                     0
                 </span>
             </a>
@@ -97,12 +124,24 @@ if (!function_exists('isAdminLoggedIn')) {
             <?php endif; ?>
         </div>
 
-        <div class="md:hidden">
-            <button id="menu-btn" class="text-slate-700 focus:outline-none">
-                <i class="fas fa-bars text-2xl"></i>
+
+        <div class="flex items-center gap-2 md:gap-4">
+            <!-- Search Icon -->
+            <!-- <button id="search-toggle" class="p-2 text-slate-700 hover:text-primary focus:outline-none transition rounded-lg hover:bg-slate-100">
+                <i class="fas fa-search text-xl"></i>
             </button>
+            
+            <div class="md:hidden">
+                <button id="menu-btn" class="text-slate-700 focus:outline-none">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div> -->
         </div>
     </div>
+    
+
+    <!-- Navbar search connected via JS -->
+
 
     <div id="mobile-menu" class="hidden md:hidden mt-4 bg-white rounded-2xl p-4 shadow-xl border border-slate-100 flex-col space-y-4">
         <a href="index.php" class="block font-medium text-slate-700">Home</a>
@@ -114,7 +153,8 @@ if (!function_exists('isAdminLoggedIn')) {
         </a>
         <a href="wishlist.php" class="block font-medium text-slate-700 relative">
             Wishlist
-            <span class="wishlist-count absolute -top-1 -right-6 hidden h-4 w-4 items-center justify-center rounded-full bg-pink-500 text-xs text-white">
+wishlist-count absolute -top-1 -right-6 hidden h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+
                 0
             </span>
         </a>

@@ -59,7 +59,7 @@ if (!empty($product['specs'])) {
             </div>
         </div>
 
-        <div data-product-id="<?php echo $productId; ?>">
+        <div data-product-id="<?php echo $productId; ?>" data-product-name="<?php echo htmlspecialchars((string) $product['name'], ENT_QUOTES, 'UTF-8'); ?>">
             <div class="flex items-center space-x-2 mb-4">
                 <span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-widest">
                     <?php echo htmlspecialchars((string)$product['brand'], ENT_QUOTES, 'UTF-8'); ?>
@@ -83,7 +83,7 @@ if (!empty($product['specs'])) {
                 <?php echo htmlspecialchars((string)($product['description'] ?: 'No description available for this product yet.'), ENT_QUOTES, 'UTF-8'); ?>
             </p>
 
-            <?php if (!empty($specs)): ?>
+<?php if (!empty($specs)): ?>
                 <div class="mb-10">
                     <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
                         <i class="fas fa-list-ul mr-3 text-primary"></i> Technical Specifications
@@ -98,6 +98,25 @@ if (!empty($product['specs'])) {
                     </div>
                 </div>
             <?php endif; ?>
+
+            <section class="mb-16 rounded-[2rem] border border-slate-100 bg-slate-50/70 p-6 md:p-8">
+                <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.25em] text-primary">Customer Feedback</p>
+                        <h2 class="mt-2 text-2xl font-extrabold text-slate-800">Ratings & Reviews</h2>
+                    </div>
+                    <p class="text-sm text-slate-500">Verified buyers can rate after their order is delivered.</p>
+                </div>
+
+                <div id="product-reviews-container">
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                            <i class="fas fa-star text-2xl text-slate-400"></i>
+                        </div>
+                        <p class="text-slate-500 text-lg">Loading reviews...</p>
+                    </div>
+                </div>
+            </section>
 
             <div class="space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
@@ -223,4 +242,5 @@ syncProductWishlistButton();
     }
 </style>
 
+    <script src="<?php echo appUrl('assets/js/review-functions.js'); ?>"></script>
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -7,7 +7,6 @@ if (!isLoggedIn()) {
 }
 ?>
 
-
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <!-- Hero Section -->
@@ -26,9 +25,12 @@ if (!isLoggedIn()) {
             View Offers
         </button>
     </div>
+    
+
 </section>
 
 <!-- Mobile Brands Filter (Visual only) -->
+
 <div id="brand-filters" class="flex overflow-x-auto pb-8 mb-10 gap-4 no-scrollbar">
     <?php
     $brands = ['All', 'Apple', 'Samsung', 'Google', 'OnePlus', 'Xiaomi', 'Vivo', 'Oppo', 'Realme', 'iQOO', 'Asus'];
@@ -85,12 +87,19 @@ function renderProducts(products) {
         </div>
       </div>
       <div class="p-8 flex flex-col flex-grow">
+
         <div class="flex justify-between items-start mb-2">
           <span class="text-primary font-bold text-xs uppercase tracking-widest">${product.brand}</span>
-          <div class="flex text-yellow-400 text-xs">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+        <div class="flex text-yellow-400 text-xs rating-stars" data-product-id="${product.id}">
+            <i class="far fa-star" data-rating-star="1"></i>
+            <i class="far fa-star" data-rating-star="2"></i>
+            <i class="far fa-star" data-rating-star="3"></i>
+            <i class="far fa-star" data-rating-star="4"></i>
+            <i class="far fa-star" data-rating-star="5"></i>
+            <span class="ml-1 text-slate-400 text-xs font-medium">New</span>
           </div>
         </div>
+
         <h3 class="text-xl font-bold text-slate-800 mb-2 truncate">${product.name}</h3>
         <p class="text-slate-500 text-sm line-clamp-2 mb-6">${product.description}</p>
         <div class="mt-auto flex items-center justify-between">
@@ -165,14 +174,38 @@ function applyHeroFilter(mode = 'all') {
   setActiveHeroButton(mode);
 }
 
+async function loadProductRatings(productId) {
+  try {
+    const data = await apiCall('GET', 'product_reviews.php', {id: productId}, {showLoader: false});
+    const stars = document.querySelector(`[data-product-id="${productId}"] .rating-stars`);
+    if (stars && data.avg_rating) {
+      const rating = parseFloat(data.avg_rating);
+      stars.querySelectorAll('[data-rating-star]').forEach((star, i) => {
+        if (i + 1 <= rating) star.className = 'fas fa-star';
+        else star.className = 'far fa-star';
+      });
+      stars.querySelector('span').textContent = rating.toFixed(1) + ` (${data.total_reviews})`;
+    }
+  } catch(e) {}
+}
+
 async function loadProducts() {
+  console.log('Loading products...');
   try {
     const data = await apiCall('GET', 'products.php');
-    allProducts = data.products || [];
+    console.log('API response:', data);
+    allProducts = data.products || data || [];
+    console.log('Parsed products:', allProducts.length);
+    renderProducts(getFilteredProducts());
+    
+    // Load ratings
+    setTimeout(() => allProducts.forEach(p => loadProductRatings(p.id)), 100);
+    
     applyBrandFilter(activeBrand);
     setActiveHeroButton(activeHeroFilter);
-    showToast('Products loaded!');
+    showToast(`Products loaded! (${allProducts.length})`);
   } catch (err) {
+    console.error('Load error:', err);
     document.getElementById('products-grid').innerHTML = '<p class="col-span-full text-center text-slate-500 py-20">Failed to load products. <button onclick="loadProducts()" class="text-primary underline">Retry</button></p>';
   }
 }
@@ -201,8 +234,220 @@ function loadProductDetail(id) {
   window.location.href = 'product.php?id=' + id;
 }
 
+// Rating stars loader
+async function loadProductRatings(productId) {
+  try {
+    const data = await apiCall('GET', 'product_reviews.php?id=' + productId, null, {showLoader: false});
+    const starsDiv = document.querySelector(`[data-product-id="${productId}"] .rating-stars`);
+    if (starsDiv && data.success && data.avg_rating > 0) {
+      const rating = parseFloat(data.avg_rating);
+      starsDiv.querySelectorAll('[data-rating-star]').forEach((star, i) => {
+        star.className = (i + 1 <= rating) ? 'fas fa-star' : 'far fa-star';
+      });
+      const ratingText = starsDiv.querySelector('span:last-child');
+      if (ratingText) ratingText.textContent = rating.toFixed(1) + ` (${data.total_reviews || 0})`;
+    }
+  } catch (e) {
+    console.log('Rating load failed for', productId);
+  }
+}
+
+
+// Search + Filter Logic
+let searchQuery = '';
+let sortBy = 'relevance';
+let minPrice = 0;
+let maxPrice = Infinity;
+let minRating = 0;
+
+function searchProducts() {
+  const query = normalizeSearch(searchQuery);
+  return allProducts.filter(product => {
+    // Search match
+    const matchesSearch = !query || 
+      normalizeSearch(product.name).includes(query) ||
+      normalizeSearch(product.brand).includes(query) ||
+      normalizeSearch(product.description || '').includes(query);
+    
+    // Price match
+    const price = parseFloat(product.price);
+    const matchesPrice = price >= minPrice && price <= maxPrice;
+    
+    // Rating match
+    const matchesRating = minRating === 0 || product.avg_rating >= minRating;
+    
+    return matchesSearch && matchesPrice && matchesRating;
+  });
+}
+
+function normalizeSearch(str) {
+  return String(str || '').toLowerCase().trim();
+}
+
+function updateResultsCount(count) {
+  const countEl = document.getElementById('results-count');
+  if (!countEl) return; // No element - safe
+  countEl.classList.remove('hidden');
+  countEl.textContent = `${count.toLocaleString()} phone${count === 1 ? '' : 's'} found`;
+}
+
+function getSortedProducts(products) {
+  return products.slice().sort((a, b) => {
+    switch (sortBy) {
+      case 'price-asc': return parseFloat(a.price) - parseFloat(b.price);
+      case 'price-desc': return parseFloat(b.price) - parseFloat(a.price);
+      case 'name': return a.name.localeCompare(b.name);
+      case 'date': return new Date(b.created_at) - new Date(a.created_at);
+      case 'rating': return (b.avg_rating || 0) - (a.avg_rating || 0);
+      default: return 0;
+    }
+  });
+}
+
+function getFilteredProducts() {
+  const normalizedBrand = normalizeBrandName(activeBrand);
+  let filtered = searchProducts();
+  
+  // Brand filter
+  if (normalizedBrand !== 'all') {
+    filtered = filtered.filter(product => 
+      normalizeBrandName(product.brand).includes(normalizedBrand)
+    );
+  }
+  
+  // Hero offer filter
+  if (activeHeroFilter === 'offers') {
+    filtered = filtered.filter(p => p.has_discount);
+  }
+  
+  const sorted = getSortedProducts(filtered);
+  updateResultsCount(sorted.length);
+  return sorted;
+}
+
+// Event listeners
+
+document.addEventListener('DOMContentLoaded', () => {
+  const navbarSearch = document.getElementById('navbar-search');
+  const navbarFilter = document.getElementById('navbar-filter');
+
+  const sortSelect = document.getElementById('sort-select');
+  const clearBtn = document.getElementById('clear-search');
+  const searchToggle = document.getElementById('search-toggle');
+  const closeSearch = document.getElementById('close-search');
+  const globalSearch = document.getElementById('global-search');
+  const searchOverlay = document.getElementById('search-overlay');
+  
+  // Hero search
+  if (navbarSearch) {
+    navbarSearch.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderProducts(getFilteredProducts());
+    });
+  }
+  
+  if (navbarFilter) {
+    navbarFilter.addEventListener('change', (e) => {
+      const value = e.target.value;
+      const map = {
+        'Price Low-High': 'price-asc',
+        'Price High-Low': 'price-desc',
+        'Highest Rated': 'rating',
+        'Newest First': 'date',
+        'All Products': 'relevance'
+      };
+      sortBy = map[value] || 'relevance';
+      renderProducts(getFilteredProducts());
+    });
+  }
+
+
+  
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      const map = {
+        'Price Low-High': 'price-asc',
+        'Price High-Low': 'price-desc',
+        'Newest First': 'date',
+        'Highest Rated': 'rating',
+        'Sort: Relevance': 'relevance'
+      };
+      sortBy = map[e.target.value] || 'relevance';
+      renderProducts(getFilteredProducts());
+    });
+  }
+  
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      searchQuery = '';
+      sortBy = 'relevance';
+      if (searchInput) searchInput.value = '';
+      if (sortSelect) sortSelect.value = 'Sort: Relevance';
+      renderProducts(getFilteredProducts());
+    });
+  }
+  
+  // Navbar search
+  if (searchToggle) {
+    searchToggle.addEventListener('click', () => {
+      if (searchOverlay) searchOverlay.classList.remove('hidden');
+    });
+  }
+  
+  if (closeSearch) {
+    closeSearch.addEventListener('click', () => {
+      if (searchOverlay) searchOverlay.classList.add('hidden');
+    });
+  }
+  
+  if (globalSearch) {
+    globalSearch.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      if (searchInput) searchInput.value = searchQuery;
+      renderProducts(getFilteredProducts());
+      // Sync to hero input
+    });
+  }
+  
+  // Close on overlay click
+  if (searchOverlay) {
+    searchOverlay.addEventListener('click', (e) => {
+      if (e.target === searchOverlay) {
+        searchOverlay.classList.add('hidden');
+      }
+    });
+  }
+  
+  // ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !searchOverlay.classList.contains('hidden')) {
+      searchOverlay.classList.add('hidden');
+    }
+  });
+});
+
+// Fix ratings after render
+function loadRatingsForProducts(products) {
+  products.forEach(product => {
+    setTimeout(() => loadProductRatings(product.id), Math.random() * 200 + 100);
+  });
+}
+
+const originalRenderProducts = renderProducts;
+renderProducts = function(products) {
+  originalRenderProducts(products);
+  setTimeout(() => loadRatingsForProducts(products), 200);
+};
+
 // Load on page
 loadProducts();
+setTimeout(() => {
+  document.querySelectorAll('[data-product-id]').forEach(el => {
+    const id = el.dataset.productId;
+    if (id) loadProductRatings(id);
+  });
+}, 500);
+
 </script>
 
 <style>

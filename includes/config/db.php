@@ -26,6 +26,49 @@ try {
     exit;
 }
 
+function ensureProductReviewsTable(PDO $pdo): void {
+    static $initialized = false;
+    if ($initialized) {
+        return;
+    }
+
+    try {
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS product_reviews (
+                review_id INT AUTO_INCREMENT PRIMARY KEY,
+                order_item_id INT NOT NULL,
+                rating INT NOT NULL,
+                review_text TEXT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_active TINYINT(1) DEFAULT 1,
+                UNIQUE KEY unique_review_per_item (order_item_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+        );
+
+        $columnsStmt = $pdo->query('SHOW COLUMNS FROM product_reviews');
+        $existingColumns = [];
+        foreach ($columnsStmt->fetchAll() as $column) {
+            $existingColumns[] = (string) $column['Field'];
+        }
+
+        if (!in_array('is_active', $existingColumns, true)) {
+            $pdo->exec('ALTER TABLE product_reviews ADD COLUMN is_active TINYINT(1) DEFAULT 1');
+        }
+
+        if (!in_array('created_at', $existingColumns, true)) {
+            $pdo->exec('ALTER TABLE product_reviews ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+        }
+    } catch (Throwable $e) {
+        if (defined('APP_DEBUG') && APP_DEBUG) {
+            error_log('Review table setup failed: ' . $e->getMessage());
+        }
+    }
+
+    $initialized = true;
+}
+
+ensureProductReviewsTable($pdo);
+
 function ensureSessionStarted(): void {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();

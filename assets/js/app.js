@@ -252,6 +252,15 @@ async function updateWishlistCount() {
   }
 }
 
+// Load review functions
+if (typeof loadProductReviews !== 'undefined') {
+  const productContainer = document.querySelector('[data-product-id]');
+  if (productContainer) {
+    const productId = productContainer.dataset.productId;
+    loadProductReviews(productId, 'product-reviews-container');
+  }
+}
+
 // Init
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {

@@ -75,3 +75,20 @@ CREATE TABLE `order_items` (
 -- Indexes
 CREATE INDEX `idx_user_master_email` ON `user_master` (`email`);
 CREATE INDEX `idx_shopping_cart_user` ON `shopping_cart` (`user_id`, `is_active`);
+
+-- Product Reviews Table (NEW)
+CREATE TABLE IF NOT EXISTS `product_reviews` (
+  `review_id` INT AUTO_INCREMENT PRIMARY KEY,
+  `order_item_id` INT NOT NULL,
+  `rating` INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  `review_text` TEXT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `is_active` TINYINT(1) DEFAULT 1,
+  FOREIGN KEY (`order_item_id`) REFERENCES `order_items`(`order_item_id`) ON DELETE CASCADE,
+  UNIQUE KEY `unique_review_per_item` (`order_item_id`)
+) ENGINE=InnoDB;
+
+-- Sample reviews for testing (optional)
+INSERT IGNORE INTO `product_reviews` (`order_item_id`, `rating`, `review_text`) VALUES
+(1, 5, 'Amazing phone! Best purchase ever.'),
+(2, 4, 'Great camera quality.');
