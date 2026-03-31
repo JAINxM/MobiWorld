@@ -18,6 +18,15 @@ if (!isLoggedIn()) {
 </div>
 
 <script>
+function formatCurrency(value) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(value || 0));
+}
+
 async function loadCart() {
   try {
     const data = await apiCall('GET', 'cart_get.php');
@@ -48,7 +57,7 @@ async function loadCart() {
             <div class="flex-grow text-center md:text-left">
               <span class="text-primary text-xs font-bold uppercase tracking-widest">${item.brand}</span>
               <h3 class="text-xl font-bold text-slate-800 mb-1">${item.name}</h3>
-              <p class="text-slate-400 text-sm mb-4">$${parseFloat(item.price).toLocaleString()} each</p>
+              <p class="text-slate-400 text-sm mb-4">${formatCurrency(item.price)} each</p>
             </div>
             <div class="flex items-center bg-slate-100 rounded-xl p-1">
               <button onclick="updateCartItem(${item.product_id}, ${item.quantity - 1})" class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-primary transition">
@@ -60,7 +69,7 @@ async function loadCart() {
               </button>
             </div>
             <div class="text-xl font-bold text-slate-900 w-auto md:w-24 text-center md:text-right">
-              $${item.subtotal.toLocaleString()}
+              ${formatCurrency(item.subtotal)}
             </div>
             <button onclick="removeCartItem(${item.product_id})" class="absolute top-4 right-4 md:static text-slate-300 hover:text-red-500 transition text-xl">
               <i class="fas fa-times-circle"></i>
@@ -82,7 +91,7 @@ async function loadCart() {
           <div class="space-y-4 mb-8">
             <div class="flex justify-between text-slate-500">
               <span>Subtotal</span>
-              <span class="font-bold text-slate-800">$${data.total.toLocaleString()}</span>
+              <span class="font-bold text-slate-800">${formatCurrency(data.total)}</span>
             </div>
             <div class="flex justify-between text-slate-500">
               <span>Shipping</span>
@@ -90,12 +99,12 @@ async function loadCart() {
             </div>
             <div class="flex justify-between text-slate-500">
               <span>Tax (Estimated)</span>
-              <span class="font-bold text-slate-800">$0.00</span>
+              <span class="font-bold text-slate-800">${formatCurrency(0)}</span>
             </div>
           </div>
           <div class="border-t border-slate-100 pt-6 mb-10 flex justify-between items-center">
             <span class="text-xl font-bold text-slate-800">Total Amount</span>
-            <span class="text-3xl font-extrabold text-primary">$${data.total.toLocaleString()}</span>
+            <span class="text-3xl font-extrabold text-primary">${formatCurrency(data.total)}</span>
           </div>
           <a href="checkout.php" class="block w-full text-center py-5 bg-gradient-to-r from-primary to-secondary text-white rounded-2xl font-bold text-lg hover:shadow-xl hover:shadow-indigo-200 transition-all transform active:scale-95 shadow-lg shadow-indigo-100 group">
             Proceed to Checkout

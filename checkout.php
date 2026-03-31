@@ -69,6 +69,14 @@ if (!$user) {
                     </div>
                     <i class="fas fa-money-bill-wave ml-auto text-2xl text-primary"></i>
                 </label>
+                <label class="flex items-center p-6 border-2 border-slate-100 rounded-2xl cursor-pointer hover:border-primary/40 hover:bg-indigo-50/40 transition">
+                    <input type="radio" name="payment_method" value="razorpay" form="checkout-form" class="w-5 h-5 text-primary">
+                    <div class="ml-4">
+                        <span class="block font-bold text-slate-800 text-lg">Razorpay (Test)</span>
+                        <span class="text-sm text-slate-500">Pay using UPI / Cards / Netbanking</span>
+                    </div>
+                    <i class="fas fa-bolt ml-auto text-2xl text-primary"></i>
+                </label>
                 <label class="flex items-center p-6 border-2 border-slate-100 rounded-2xl cursor-not-allowed opacity-50">
                     <input type="radio" name="payment_method" disabled class="w-5 h-5">
                     <div class="ml-4">
@@ -94,7 +102,7 @@ if (!$user) {
             <div class="border-t border-white/10 pt-6 space-y-4 mb-8 relative">
                 <div class="flex justify-between text-white/60">
                     <span>Subtotal</span>
-                    <span id="subtotal-amount">$0.00</span>
+                    <span id="subtotal-amount">₹0.00</span>
                 </div>
                 <div class="flex justify-between text-white/60">
                     <span>Shipping</span>
@@ -102,7 +110,7 @@ if (!$user) {
                 </div>
                 <div class="flex justify-between text-xl font-bold pt-2 border-t border-white/10 mt-4">
                     <span>Total</span>
-                    <span id="total-amount" class="text-primary">$0.00</span>
+                    <span id="total-amount" class="text-primary">₹0.00</span>
                 </div>
             </div>
 
@@ -118,12 +126,16 @@ if (!$user) {
     </div>
 </div>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <script>
 function formatCurrency(value) {
-    return '$' + Number(value || 0).toLocaleString(undefined, {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    });
+    }).format(Number(value || 0));
 }
 
 function showCheckoutMessage(message, type) {
@@ -195,13 +207,86 @@ document.getElementById('checkout-form').addEventListener('submit', async functi
     };
 
     button.disabled = true;
-    button.textContent = 'Placing Order...';
+    button.textContent = 'Processing...';
 
     try {
+        const selectedMethod = String(payload.payment_method || 'cod');
+
+        if (selectedMethod === 'razorpay') {
+            const create = await apiCall('POST', 'razorpay_create_order.php', payload);
+            const rp = create.razorpay;
+
+            if (!window.Razorpay) {
+                throw new Error('Razorpay checkout script failed to load.');
+            }
+
+            button.textContent = 'Opening Razorpay...';
+
+            const options = {
+                key: rp.key_id,
+                amount: rp.amount,
+                currency: rp.currency,
+                name: rp.name,
+                description: rp.description,
+                order_id: rp.order_id,
+                prefill: rp.prefill || {},
+                notes: rp.notes || {},
+                theme: { color: '#6366f1' },
+                handler: async function (response) {
+                    try {
+                        button.disabled = true;
+                        button.textContent = 'Verifying payment...';
+                        const verify = await apiCall('POST', 'razorpay_verify.php', {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        });
+
+                        updateCartCount();
+                        let msg = 'Payment successful. Your order number is #' + verify.order.order_id + '.';
+                        showCheckoutMessage(msg, 'success');
+
+                        document.getElementById('recipient_name').value = <?php echo json_encode((string)$user['full_name']); ?>;
+                        document.getElementById('checkout-items').innerHTML = `
+                            <div class="text-center py-10">
+                                <p class="text-white mb-2 text-lg font-bold">Order confirmed</p>
+                                <p class="text-white/60 mb-6">We have received your order and will start processing it shortly.</p>
+                                <a href="index.php" class="inline-block px-6 py-3 rounded-xl bg-white text-slate-900 font-bold">Shop More</a>
+                            </div>
+                        `;
+                        document.getElementById('subtotal-amount').textContent = formatCurrency(0);
+                        document.getElementById('total-amount').textContent = formatCurrency(0);
+                    } catch (err) {
+                        showCheckoutMessage(err.message || 'Payment verification failed.', 'error');
+                    } finally {
+                        button.disabled = false;
+                        button.textContent = 'Confirm & Place Order';
+                        loadCheckoutCart();
+                    }
+                },
+                modal: {
+                    ondismiss: function () {
+                        button.disabled = false;
+                        button.textContent = 'Confirm & Place Order';
+                        showCheckoutMessage('Payment cancelled.', 'error');
+                    }
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (resp) {
+                const msg = (resp && resp.error && resp.error.description) ? resp.error.description : 'Payment failed.';
+                showCheckoutMessage('Payment failed: ' + msg, 'error');
+            });
+            rzp.open();
+            return;
+        }
+
         const data = await apiCall('POST', 'order_place.php', payload);
         updateCartCount();
-        showCheckoutMessage('Order placed successfully. Your order number is #' + data.order.order_id + '.', 'success');
-// event.currentTarget.reset(); // FIXED null reset error
+        let msg = 'Order placed successfully. Your order number is #' + data.order.order_id + '.';
+        showCheckoutMessage(msg, 'success');
+
         document.getElementById('recipient_name').value = <?php echo json_encode((string)$user['full_name']); ?>;
         document.getElementById('checkout-items').innerHTML = `
             <div class="text-center py-10">

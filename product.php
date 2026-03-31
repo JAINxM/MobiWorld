@@ -70,11 +70,11 @@ if (!empty($product['specs'])) {
             <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-800 mb-6"><?php echo htmlspecialchars((string)$product['name'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
             <div class="flex flex-wrap items-center gap-3 md:gap-4 mb-8">
-                <span class="text-4xl font-extrabold text-primary">$<?php echo number_format($displayPrice, 2); ?></span>
+                <span class="text-4xl font-extrabold text-primary">₹<?php echo number_format($displayPrice, 2); ?></span>
                 <?php if ($discountedPrice !== null && $discountedPrice > 0 && $regularPrice > $discountedPrice): ?>
-                    <span class="text-xl text-slate-400 line-through">$<?php echo number_format($regularPrice, 2); ?></span>
+                    <span class="text-xl text-slate-400 line-through">₹<?php echo number_format($regularPrice, 2); ?></span>
                     <span class="bg-green-100 text-green-600 px-3 py-1 rounded-lg text-sm font-bold">
-                        Save $<?php echo number_format($regularPrice - $discountedPrice, 2); ?>
+                        Save ₹<?php echo number_format($regularPrice - $discountedPrice, 2); ?>
                     </span>
                 <?php endif; ?>
             </div>

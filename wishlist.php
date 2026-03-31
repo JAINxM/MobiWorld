@@ -69,7 +69,7 @@ async function loadWishlistProducts() {
           <h3 class="text-xl font-bold text-slate-800 mb-2 truncate">${product.name}</h3>
           <p class="text-slate-500 text-sm line-clamp-2 mb-6">${product.description}</p>
           <div class="mt-auto flex items-center justify-between">
-            <span class="text-2xl font-extrabold text-slate-900">$${parseFloat(product.price).toLocaleString()}</span>
+            <span class="text-2xl font-extrabold text-slate-900">${new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(parseFloat(product.price || 0))}</span>
             <a href="#" onclick="loadProductDetail(${product.id}); return false;" class="text-primary font-bold text-sm hover:underline flex items-center">
               Details <i class="fas fa-arrow-right ml-2 text-xs"></i>
             </a>

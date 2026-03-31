@@ -22,8 +22,25 @@ async function apiCall(method, endpoint, data = null, options = {}) {
       body: data ? JSON.stringify(data) : null,
       credentials: 'same-origin'
     });
+
     const rawText = await res.text();
-    const result = rawText ? JSON.parse(rawText) : {};
+    let result = {};
+    if (rawText) {
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      const looksJson = contentType.includes('application/json') || rawText.trim().startsWith('{') || rawText.trim().startsWith('[');
+      if (looksJson) {
+        try {
+          result = JSON.parse(rawText);
+        } catch (e) {
+          const snippet = rawText.trim().slice(0, 200);
+          throw new Error(`Invalid JSON response (${res.status}). Snippet: ${snippet}`);
+        }
+      } else {
+        const snippet = rawText.trim().slice(0, 200);
+        throw new Error(`Unexpected non-JSON response (${res.status}). Snippet: ${snippet}`);
+      }
+    }
+
     if (showLoader) {
       showLoading(false);
     }

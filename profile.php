@@ -125,7 +125,7 @@ if (!empty($orderIds)) {
                     <i class="fas fa-wallet"></i>
                 </div>
                 <div>
-                    <span class="block text-2xl font-extrabold text-slate-800">$<?php echo number_format($totalSpending, 2); ?></span>
+                    <span class="block text-2xl font-extrabold text-slate-800">₹<?php echo number_format($totalSpending, 2); ?></span>
                     <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Total Spending</span>
                 </div>
             </div>
@@ -165,7 +165,7 @@ if (!empty($orderIds)) {
                                     </p>
                                 </div>
                                 <div class="text-left md:text-right">
-                                    <span class="block text-2xl font-extrabold text-slate-900">$<?php echo number_format((float)$order['total_amount'], 2); ?></span>
+                                    <span class="block text-2xl font-extrabold text-slate-900">₹<?php echo number_format((float)$order['total_amount'], 2); ?></span>
                                     <span class="text-sm text-slate-400"><?php echo count($items); ?> Product<?php echo count($items) === 1 ? '' : 's'; ?></span>
                                 </div>
                             </div>
@@ -189,7 +189,7 @@ if (!empty($orderIds)) {
                                                 <p class="text-xs font-bold uppercase tracking-widest text-primary"><?php echo htmlspecialchars((string)$item['brand'], ENT_QUOTES, 'UTF-8'); ?></p>
                                                 <h5 class="font-bold text-slate-800 line-clamp-2 min-h-[3rem]"><?php echo htmlspecialchars((string)$item['name'], ENT_QUOTES, 'UTF-8'); ?></h5>
                                                 <p class="text-sm text-slate-500">Qty: <?php echo (int)$item['quantity']; ?></p>
-                                                <p class="text-lg font-extrabold text-slate-900">$<?php echo number_format((float)$item['price_at_time'], 2); ?></p>
+                                                <p class="text-lg font-extrabold text-slate-900">₹<?php echo number_format((float)$item['price_at_time'], 2); ?></p>
                                                 <div class="flex gap-2 pt-2">
                                                     <a href="product.php?id=<?php echo (int)$item['product_id']; ?>" class="inline-flex items-center text-sm font-bold text-primary hover:underline">
                                                         Open Product
@@ -223,4 +223,3 @@ if (!empty($orderIds)) {
 
     <script src="<?php echo appUrl('assets/js/review-functions.js'); ?>"></script>
 <?php include __DIR__ . '/includes/footer.php'; ?>
-
