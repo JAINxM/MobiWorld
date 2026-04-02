@@ -61,7 +61,7 @@ if (!$user) {
                 <i class="fas fa-credit-card text-primary mr-4"></i> Payment Method
             </h3>
             <div class="space-y-4">
-                <label class="flex items-center p-6 border-2 border-primary bg-indigo-50 rounded-2xl cursor-pointer">
+                <label data-payment-option class="flex items-center p-6 border-2 border-primary bg-indigo-50 rounded-2xl cursor-pointer">
                     <input type="radio" name="payment_method" value="cod" checked form="checkout-form" class="w-5 h-5 text-primary">
                     <div class="ml-4">
                         <span class="block font-bold text-slate-800 text-lg">Cash on Delivery (COD)</span>
@@ -69,7 +69,7 @@ if (!$user) {
                     </div>
                     <i class="fas fa-money-bill-wave ml-auto text-2xl text-primary"></i>
                 </label>
-                <label class="flex items-center p-6 border-2 border-slate-100 rounded-2xl cursor-pointer hover:border-primary/40 hover:bg-indigo-50/40 transition">
+                <label data-payment-option class="flex items-center p-6 border-2 border-slate-100 rounded-2xl cursor-pointer hover:border-primary/40 hover:bg-indigo-50/40 transition">
                     <input type="radio" name="payment_method" value="razorpay" form="checkout-form" class="w-5 h-5 text-primary">
                     <div class="ml-4">
                         <span class="block font-bold text-slate-800 text-lg">Razorpay (Test)</span>
@@ -77,7 +77,7 @@ if (!$user) {
                     </div>
                     <i class="fas fa-bolt ml-auto text-2xl text-primary"></i>
                 </label>
-                <label class="flex items-center p-6 border-2 border-slate-100 rounded-2xl cursor-not-allowed opacity-50">
+                <label data-payment-option class="flex items-center p-6 border-2 border-slate-100 rounded-2xl cursor-not-allowed opacity-50">
                     <input type="radio" name="payment_method" disabled class="w-5 h-5">
                     <div class="ml-4">
                         <span class="block font-bold text-slate-800 text-lg">Credit / Debit Card</span>
@@ -194,6 +194,35 @@ async function loadCheckoutCart() {
         document.getElementById('checkout-items').innerHTML = '<p class="text-white/60">Failed to load your cart. Please refresh and try again.</p>';
     }
 }
+
+function syncPaymentMethodStyles() {
+    const labels = Array.from(document.querySelectorAll('label[data-payment-option]'));
+
+    labels.forEach(label => {
+        const input = label.querySelector('input[type="radio"][name="payment_method"]');
+        if (!input) {
+            return;
+        }
+        if (input.disabled) {
+            return;
+        }
+
+        const selected = input.checked;
+
+        label.classList.toggle('border-primary', selected);
+        label.classList.toggle('bg-indigo-50', selected);
+
+        label.classList.toggle('border-slate-100', !selected);
+        label.classList.toggle('hover:border-primary/40', !selected);
+        label.classList.toggle('hover:bg-indigo-50/40', !selected);
+        label.classList.toggle('transition', !selected);
+    });
+}
+
+document.querySelectorAll('input[type="radio"][name="payment_method"]').forEach(input => {
+    input.addEventListener('change', syncPaymentMethodStyles);
+});
+syncPaymentMethodStyles();
 
 document.getElementById('checkout-form').addEventListener('submit', async function (event) {
     event.preventDefault();
