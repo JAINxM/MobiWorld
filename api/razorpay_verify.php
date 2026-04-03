@@ -74,13 +74,19 @@ try {
     $pdo->beginTransaction();
 
     $orderStmt = $pdo->prepare(
-        'INSERT INTO orders (user_id, total_amount, order_status, created_at)
-         VALUES (?, ?, ?, NOW())'
+        'INSERT INTO orders (user_id, total_amount, order_status, created_at, payment_method, payment_status, recipient_name, shipping_address, razorpay_order_id, razorpay_payment_id, paid_at)
+         VALUES (?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, NOW())'
     );
     $orderStmt->execute([
         $userId,
         $totalAmount,
         'confirmed',
+        'razorpay',
+        'paid',
+        $recipientName,
+        $shippingAddress,
+        $razorpayOrderId,
+        $razorpayPaymentId,
     ]);
 
     $orderId = (int) $pdo->lastInsertId();

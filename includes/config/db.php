@@ -69,6 +69,52 @@ function ensureProductReviewsTable(PDO $pdo): void {
 
 ensureProductReviewsTable($pdo);
 
+function ensureOrdersExtendedColumns(PDO $pdo): void
+{
+    static $initialized = false;
+    if ($initialized) {
+        return;
+    }
+
+    try {
+        $columnsStmt = $pdo->query('SHOW COLUMNS FROM orders');
+        $existingColumns = [];
+        foreach ($columnsStmt->fetchAll() as $column) {
+            $existingColumns[] = (string) $column['Field'];
+        }
+
+        if (!in_array('payment_method', $existingColumns, true)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN payment_method VARCHAR(32) NULL");
+        }
+        if (!in_array('payment_status', $existingColumns, true)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN payment_status VARCHAR(20) NULL");
+        }
+        if (!in_array('recipient_name', $existingColumns, true)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN recipient_name VARCHAR(255) NULL");
+        }
+        if (!in_array('shipping_address', $existingColumns, true)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN shipping_address TEXT NULL");
+        }
+        if (!in_array('razorpay_order_id', $existingColumns, true)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN razorpay_order_id VARCHAR(64) NULL");
+        }
+        if (!in_array('razorpay_payment_id', $existingColumns, true)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN razorpay_payment_id VARCHAR(64) NULL");
+        }
+        if (!in_array('paid_at', $existingColumns, true)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN paid_at TIMESTAMP NULL DEFAULT NULL");
+        }
+    } catch (Throwable $e) {
+        if (defined('APP_DEBUG') && APP_DEBUG) {
+            error_log('Orders table migration failed: ' . $e->getMessage());
+        }
+    }
+
+    $initialized = true;
+}
+
+ensureOrdersExtendedColumns($pdo);
+
 function ensureSessionStarted(): void {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();

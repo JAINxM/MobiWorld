@@ -85,6 +85,10 @@ CREATE TABLE `orders` (
   `recipient_name` VARCHAR(255),
   `payment_method` VARCHAR(50),
   `transaction_id` VARCHAR(100),
+  `payment_status` VARCHAR(20) NULL,
+  `razorpay_order_id` VARCHAR(64) NULL,
+  `razorpay_payment_id` VARCHAR(64) NULL,
+  `paid_at` TIMESTAMP NULL DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   KEY `fk_orders_user_id` (`user_id`),
 CONSTRAINT `fk_orders_user_id` FOREIGN KEY (`user_id`) REFERENCES `user_master(user_id`)

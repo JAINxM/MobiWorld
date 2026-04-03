@@ -213,6 +213,7 @@ try {
 }
 
 $hasPaymentMethod = in_array('payment_method', $ordersTableColumns, true);
+$hasPaymentStatus = in_array('payment_status', $ordersTableColumns, true);
 $hasRecipientName = in_array('recipient_name', $ordersTableColumns, true);
 $hasShippingAddress = in_array('shipping_address', $ordersTableColumns, true);
 
@@ -230,6 +231,12 @@ if ($hasPaymentMethod) {
     $ordersSelectParts[] = 'o.payment_method';
 } else {
     $ordersSelectParts[] = "'N/A' AS payment_method";
+}
+
+if ($hasPaymentStatus) {
+    $ordersSelectParts[] = 'o.payment_status';
+} else {
+    $ordersSelectParts[] = "'unknown' AS payment_status";
 }
 
 if ($hasRecipientName) {
@@ -255,6 +262,9 @@ $ordersGroupByParts = [
 
 if ($hasPaymentMethod) {
     $ordersGroupByParts[] = 'o.payment_method';
+}
+if ($hasPaymentStatus) {
+    $ordersGroupByParts[] = 'o.payment_status';
 }
 if ($hasRecipientName) {
     $ordersGroupByParts[] = 'o.recipient_name';
@@ -522,7 +532,7 @@ function orderStatusBadgeClass(string $status): string
                         <?php foreach ($orders as $order): ?>
                             <div class="rounded-[1.75rem] border border-slate-100 bg-slate-50/70 p-5 transition hover:border-slate-200 hover:bg-white">
                                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                    <div><div class="mb-2 flex flex-wrap items-center gap-3"><span class="text-lg font-extrabold text-slate-800">Order #<?php echo (int) $order['order_id']; ?></span><span class="rounded-full px-3 py-1 text-xs font-bold <?php echo orderStatusBadgeClass((string) $order['order_status']); ?>"><?php echo htmlspecialchars($orderStatusLabels[(string) $order['order_status']] ?? ucwords(str_replace('_', ' ', (string) $order['order_status'])), ENT_QUOTES, 'UTF-8'); ?></span></div><p class="font-bold text-slate-700"><?php echo htmlspecialchars((string) $order['full_name'], ENT_QUOTES, 'UTF-8'); ?></p><p class="text-sm text-slate-400"><?php echo htmlspecialchars((string) $order['email'], ENT_QUOTES, 'UTF-8'); ?></p><p class="mt-3 text-sm text-slate-500">Recipient: <?php echo htmlspecialchars((string) ($order['recipient_name'] ?: 'Customer'), ENT_QUOTES, 'UTF-8'); ?></p><p class="text-sm text-slate-500">Payment: <?php echo htmlspecialchars((string) ($order['payment_method'] ?: 'N/A'), ENT_QUOTES, 'UTF-8'); ?></p><p class="mt-2 text-sm text-slate-500"><?php echo htmlspecialchars((string) ($order['shipping_address'] ?: 'No address provided'), ENT_QUOTES, 'UTF-8'); ?></p></div>
+                                    <div><div class="mb-2 flex flex-wrap items-center gap-3"><span class="text-lg font-extrabold text-slate-800">Order #<?php echo (int) $order['order_id']; ?></span><span class="rounded-full px-3 py-1 text-xs font-bold <?php echo orderStatusBadgeClass((string) $order['order_status']); ?>"><?php echo htmlspecialchars($orderStatusLabels[(string) $order['order_status']] ?? ucwords(str_replace('_', ' ', (string) $order['order_status'])), ENT_QUOTES, 'UTF-8'); ?></span></div><p class="font-bold text-slate-700"><?php echo htmlspecialchars((string) $order['full_name'], ENT_QUOTES, 'UTF-8'); ?></p><p class="text-sm text-slate-400"><?php echo htmlspecialchars((string) $order['email'], ENT_QUOTES, 'UTF-8'); ?></p><p class="mt-3 text-sm text-slate-500">Recipient: <?php echo htmlspecialchars((string) ($order['recipient_name'] ?: 'Customer'), ENT_QUOTES, 'UTF-8'); ?></p><p class="text-sm text-slate-500">Payment: <?php echo htmlspecialchars((string) ($order['payment_method'] ?: 'N/A'), ENT_QUOTES, 'UTF-8'); ?></p><p class="text-sm text-slate-500">Payment Status: <?php echo htmlspecialchars((string) ($order['payment_status'] ?: 'unknown'), ENT_QUOTES, 'UTF-8'); ?></p><p class="mt-2 text-sm text-slate-500"><?php echo htmlspecialchars((string) ($order['shipping_address'] ?: 'No address provided'), ENT_QUOTES, 'UTF-8'); ?></p></div>
                                     <div class="text-left lg:text-right"><p class="text-2xl font-extrabold text-slate-900">₹<?php echo number_format((float) $order['total_amount'], 2); ?></p><p class="text-sm text-slate-400"><?php echo (int) $order['items_count']; ?> item(s)</p><p class="mt-2 text-sm text-slate-400"><?php echo date('M d, Y H:i', strtotime((string) $order['created_at'])); ?></p>
                                         <form method="POST" action="<?php echo htmlspecialchars(adminLink('orders', $filter), ENT_QUOTES, 'UTF-8'); ?>" class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                                             <input type="hidden" name="update_order_status" value="1">

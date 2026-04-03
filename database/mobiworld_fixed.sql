@@ -106,6 +106,13 @@ CREATE TABLE `orders` (
   `user_id` INT NOT NULL,
   `total_amount` DECIMAL(10,2),
   `order_status` ENUM('pending','confirmed') DEFAULT 'pending',
+  `payment_method` VARCHAR(32) NULL,
+  `payment_status` VARCHAR(20) NULL,
+  `recipient_name` VARCHAR(255) NULL,
+  `shipping_address` TEXT NULL,
+  `razorpay_order_id` VARCHAR(64) NULL,
+  `razorpay_payment_id` VARCHAR(64) NULL,
+  `paid_at` TIMESTAMP NULL DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 

@@ -12,7 +12,7 @@ if ($userId === null) {
 $input = readJsonBody();
 $shippingAddress = isset($input['shipping_address']) && is_string($input['shipping_address']) ? trim($input['shipping_address']) : '';
 $recipientName = isset($input['recipient_name']) && is_string($input['recipient_name']) ? trim($input['recipient_name']) : '';
-$paymentMethod = isset($input['payment_method']) && is_string($input['payment_method']) ? trim($input['payment_method']) : null;
+$paymentMethod = isset($input['payment_method']) && is_string($input['payment_method']) ? trim($input['payment_method']) : 'cod';
 
 if ($shippingAddress === '') {
     jsonResponse(['success' => false, 'error' => 'shipping_address is required'], 400);
@@ -24,6 +24,14 @@ try {
         $u->execute([$userId]);
         $ur = $u->fetch();
         $recipientName = $ur ? (string)$ur['full_name'] : 'Customer';
+    }
+
+    $paymentMethod = strtolower(trim($paymentMethod));
+    if ($paymentMethod === '') {
+        $paymentMethod = 'cod';
+    }
+    if (!in_array($paymentMethod, ['cod'], true)) {
+        jsonResponse(['success' => false, 'error' => 'Invalid payment_method for this endpoint. Use Razorpay endpoints for online payment.'], 400);
     }
 
     $cartId = getActiveCartId($pdo, $userId);
@@ -51,13 +59,17 @@ try {
     $pdo->beginTransaction();
 
     $orderStmt = $pdo->prepare(
-'INSERT INTO orders (user_id, total_amount, order_status, created_at)
-         VALUES (?, ?, ?, NOW())'
+"INSERT INTO orders (user_id, total_amount, order_status, created_at, payment_method, payment_status, recipient_name, shipping_address)
+         VALUES (?, ?, ?, NOW(), ?, ?, ?, ?)"
     );
 $orderStmt->execute([
         $userId,
         $totalAmount,
-        'pending'
+        'pending',
+        $paymentMethod,
+        'unpaid',
+        $recipientName,
+        $shippingAddress,
     ]);
 
     $orderId = (int)$pdo->lastInsertId();
