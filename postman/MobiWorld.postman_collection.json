@@ -1,0 +1,313 @@
+{
+  "info": {
+    "name": "MobiWorld API",
+    "description": "Postman collection for MobiWorld `/api/*.php` endpoints (session-cookie auth). Import the environment too.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8082/MobiWorld" },
+    { "key": "email", "value": "api8082@test.com" },
+    { "key": "password", "value": "123456" },
+    { "key": "full_name", "value": "API Test" },
+    { "key": "product_id", "value": "1" },
+    { "key": "shipping_address", "value": "Test Address, City, State" },
+    { "key": "recipient_name", "value": "API Test" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"{{full_name}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/register.php"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.success && json.user && json.user.id) {",
+                  "    pm.environment.set('user_id', String(json.user.id));",
+                  "  }",
+                  "} catch (e) {}",
+                  "",
+                  "// Postman usually persists cookies automatically.",
+                  "// This keeps a copy of PHPSESSID in env vars for debugging.",
+                  "const setCookie = pm.response.headers.get('Set-Cookie');",
+                  "if (setCookie) {",
+                  "  const m = setCookie.match(/PHPSESSID=([^;]+)/);",
+                  "  if (m && m[1]) pm.environment.set('PHPSESSID', m[1]);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/login.php"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/logout.php"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.success && Array.isArray(json.products) && json.products[0] && json.products[0].id) {",
+                  "    pm.environment.set('product_id', String(json.products[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products.php"
+          }
+        },
+        {
+          "name": "Product Detail (by id)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/product_detail.php?id={{product_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart (Login Required)",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/cart_get.php"
+          }
+        },
+        {
+          "name": "Add To Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": {{product_id}},\n  \"quantity\": 1\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/cart_add.php"
+          }
+        },
+        {
+          "name": "Update Cart Quantity (0 = remove)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": {{product_id}},\n  \"quantity\": 2\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/cart_update.php"
+          }
+        },
+        {
+          "name": "Remove From Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": {{product_id}}\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/cart_remove.php"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wishlist",
+      "item": [
+        {
+          "name": "Get Wishlist (works without login too)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/wishlist_get.php"
+          }
+        },
+        {
+          "name": "Toggle Wishlist (add/remove)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": {{product_id}}\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/wishlist_toggle.php"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders (Login Required)",
+      "item": [
+        {
+          "name": "Place Order (COD / pending)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shipping_address\": \"{{shipping_address}}\",\n  \"recipient_name\": \"{{recipient_name}}\",\n  \"payment_method\": \"cod\"\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/order_place.php"
+          }
+        },
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/orders.php"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Get Product Reviews (by product id)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/product_reviews.php?id={{product_id}}"
+          }
+        },
+        {
+          "name": "Submit Review (requires delivered order item)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_item_id\": {{order_item_id}},\n  \"rating\": 5,\n  \"review_text\": \"Great product\"\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/reviews_submit.php"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Razorpay (Test)",
+      "item": [
+        {
+          "name": "Create Razorpay Order (from cart)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shipping_address\": \"{{shipping_address}}\",\n  \"recipient_name\": \"{{recipient_name}}\"\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/razorpay_create_order.php"
+          }
+        },
+        {
+          "name": "Verify Razorpay Payment (signature)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"{{razorpay_order_id}}\",\n  \"razorpay_payment_id\": \"{{razorpay_payment_id}}\",\n  \"razorpay_signature\": \"{{razorpay_signature}}\"\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/razorpay_verify.php"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Reviews (requires admin session)",
+      "item": [
+        {
+          "name": "Admin Login (web form)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "email", "value": "admin@mobiworld.com" },
+                { "key": "password", "value": "admin123" }
+              ]
+            },
+            "url": "{{baseUrl}}/admin_login.php"
+          }
+        },
+        {
+          "name": "List Reviews (paginated)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin_reviews.php?page=1"
+          }
+        },
+        {
+          "name": "Delete Review (soft delete)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"review_id\": {{review_id}}\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/admin_review_delete.php"
+          }
+        }
+      ]
+    }
+  ]
+}
+
