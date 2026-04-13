@@ -3,13 +3,13 @@
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_NAME', getenv('DB_NAME') ?: 'mobiworld');
 define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
+define('DB_PASS', getenv('DB_PASS') ?: '2216');
 
 define('APP_DEBUG', true);
 
 try {
     $pdo = new PDO(
-    'mysql:host=' . DB_HOST . ';port=3307;dbname=' . DB_NAME . ';charset=utf8mb4',
+    'mysql:host=' . DB_HOST . ';port=3306;dbname=' . DB_NAME . ';charset=utf8mb4',
     DB_USER,
     DB_PASS,
     [
