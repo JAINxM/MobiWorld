@@ -1,15 +1,18 @@
 <?php
 // Database configuration - EDIT THESE FOR YOUR SETUP
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_NAME', getenv('DB_NAME') ?: 'mobiworld');
+define('DB_HOST', getenv('DB_HOST') ?: 'interchange.proxy.rlwy.net');
+define('DB_NAME', getenv('DB_NAME') ?: 'railway');
 define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '2216');
+define('DB_PASS', getenv('DB_PASS') ?: 'nCQNXUEoDMgzPDjEPuiOhssMINopWAbr');
+define('DB_PORT', getenv('DB_PORT') ?: 17229);
+define('DB_SOCK', getenv('DB_SOCK') ?: '/home/runner/mysql-run/mysql.sock');
 
 define('APP_DEBUG', true);
 
 try {
+    $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=utf8mb4';
     $pdo = new PDO(
-    'mysql:host=' . DB_HOST . ';port=3306;dbname=' . DB_NAME . ';charset=utf8mb4',
+    $dsn,
     DB_USER,
     DB_PASS,
     [
